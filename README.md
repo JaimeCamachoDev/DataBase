@@ -1,6 +1,8 @@
 <header>
 
 ![Banner](https://github.com/user-attachments/assets/5b933a56-0ece-452a-99c0-1a641485a6b9)
+<img width="2416" height="2042" alt="Captura de pantalla 2023-09-22 a las 11 58 53" src="https://github.com/user-attachments/assets/c4be976a-a943-4879-bbd9-dccc1f5ae655" />
+<img width="3792" height="1312" alt="Captura de pantalla 2023-09-22 a las 11 59 32" src="https://github.com/user-attachments/assets/6dd315df-4d73-4f74-92cf-5854f105f358" />
 
 # **DataBase**
 
@@ -26,6 +28,7 @@ Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que pro
 - **ShoppingList**: agrupa varios `ShoppingItem` bajo un nombre de lista.
 - **ShoppingListManager**: permite crear listas y añadir elementos desde código.
 - **GoogleSheetsShoppingListLoader**: lee una hoja de cálculo publicada en formato CSV e incorpora los datos al `ShoppingListManager`.
+
 
 El componente permite indicar en el inspector los encabezados de columna que corresponden al nombre de la lista, el artículo y la cantidad. De este modo puedes usar títulos personalizados en la primera fila de tu hoja de cálculo. Si no incluyes la columna de lista, todos los elementos se añadirán a la lista indicada en `defaultListName`.
 Estos componentes sirven como base para desarrollar la funcionalidad de la aplicación sin necesidad de recompilar cada vez que cambien los datos.

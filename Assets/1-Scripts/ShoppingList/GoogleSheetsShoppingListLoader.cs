@@ -10,6 +10,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     [Tooltip("Public Google Sheets export link")]
     public string sheetUrl;
 
+
     [Header("Column titles")]                // allows using custom headers
     [Tooltip("Column used for the list name (optional)")]
     public string listHeader = "List";
@@ -48,6 +49,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         int itemCol = System.Array.IndexOf(headers, itemHeader);
         int qtyCol = System.Array.IndexOf(headers, quantityHeader);
 
+
         for (int i = 1; i < lines.Length; i++)
         {
             string line = lines[i].Trim();
@@ -56,6 +58,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
 
             string[] values = line.Split(',');
             string listName = listCol >= 0 && listCol < values.Length ? values[listCol].Trim() : defaultListName;
+
             string itemName = itemCol >= 0 && itemCol < values.Length ? values[itemCol].Trim() : string.Empty;
             string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? values[qtyCol].Trim() : "0";
             int qty = 0;
@@ -65,6 +68,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
                 continue;
 
             manager.AddItem(listName, itemName, qty);
+
         }
 
         Debug.Log("Loaded shopping lists from sheet");
