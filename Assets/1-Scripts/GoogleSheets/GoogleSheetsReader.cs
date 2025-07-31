@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Networking;
+using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
+
 
 public class GoogleSheetsReader : MonoBehaviour
 {
