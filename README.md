@@ -8,6 +8,14 @@ _**Repositorio destinado a albergar los datos para acceder desde los poryectos e
 
 
 </header>
+## 📊 Acceso a datos desde Google Sheets
+
+Este repositorio incluye un script de ejemplo (`GoogleSheetsReader`) para leer una hoja de cálculo pública de Google desde Unity. De esta forma puedes modificar el contenido de la hoja y reflejar los cambios en el juego sin recompilar.
+
+1. En tu hoja de cálculo selecciona **Archivo → Publicar en la Web** y copia el enlace de exportación en formato CSV.
+2. Coloca ese enlace en el campo **sheetUrl** del componente `GoogleSheetsReader`.
+3. Ejecuta la escena y el script descargará el contenido, mostrándolo en la consola. Puedes adaptarlo para actualizar cualquier variable de tu juego.
+
    
 <footer>
    
@@ -23,3 +31,4 @@ _**Repositorio destinado a albergar los datos para acceder desde los poryectos e
 
 
 </footer>
+
