@@ -20,6 +20,18 @@ Este repositorio incluye un script de ejemplo (`GoogleSheetsReader`) para leer u
 4. Ejecuta la escena y el script descargará el contenido, mostrándolo en la consola. El script interpreta la primera fila como los encabezados de columna y mostrará cada registro usando esos títulos. Puedes adaptarlo para actualizar cualquier variable de tu juego.
 
 
+
+## 🛒 Estructura base para una app de listas de la compra
+
+Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que proporcionan la estructura mínima para una aplicación de listas:
+
+- **ShoppingItem**: almacena el nombre del artículo y la cantidad.
+- **ShoppingList**: agrupa varios `ShoppingItem` bajo un nombre de lista.
+- **ShoppingListManager**: permite crear listas y añadir elementos desde código.
+- **GoogleSheetsShoppingListLoader**: lee una hoja de cálculo publicada en formato CSV e incorpora los datos al `ShoppingListManager`.
+
+La hoja debe tener las columnas `List`, `Item` y `Units` en la primera fila, pero puedes cambiar sus títulos modificando el script.
+Estos componentes sirven como base para desarrollar la funcionalidad de la aplicación sin necesidad de recompilar cada vez que cambien los datos.
    
 <footer>
    
