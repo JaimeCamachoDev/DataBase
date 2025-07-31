@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
 
+
 public class GoogleSheetsReader : MonoBehaviour
 {
     [Tooltip("Public Google Sheets export link")] 

@@ -17,6 +17,7 @@ Este repositorio incluye un script de ejemplo (`GoogleSheetsReader`) para leer u
 3. Asegúrate de tener activado el paquete integrado **Unity Web Request** en *Package Manager* o añade la dependencia `com.unity.modules.unitywebrequest` al `manifest.json`.
 4. Ejecuta la escena y el script descargará el contenido, mostrándolo en la consola. Puedes adaptarlo para actualizar cualquier variable de tu juego.
 
+
    
 <footer>
    
