@@ -10,6 +10,17 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     [Tooltip("Public Google Sheets export link")]
     public string sheetUrl;
 
+
+    [Header("Column titles")]                // allows using custom headers
+    [Tooltip("Column used for the list name (optional)")]
+    public string listHeader = "List";
+    [Tooltip("Column used for the item name")]
+    public string itemHeader = "Item";
+    [Tooltip("Column used for the item quantity")]
+    public string quantityHeader = "Units";
+    [Tooltip("Name used when no list column is present")]
+    public string defaultListName = "List";
+
     void Start()
     {
         if (manager != null && !string.IsNullOrEmpty(sheetUrl))
@@ -34,9 +45,10 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             yield break;
 
         string[] headers = lines[0].Split(',');
-        int listCol = System.Array.IndexOf(headers, "List");
-        int itemCol = System.Array.IndexOf(headers, "Item");
-        int qtyCol = System.Array.IndexOf(headers, "Units");
+        int listCol = System.Array.IndexOf(headers, listHeader);
+        int itemCol = System.Array.IndexOf(headers, itemHeader);
+        int qtyCol = System.Array.IndexOf(headers, quantityHeader);
+
 
         for (int i = 1; i < lines.Length; i++)
         {
@@ -45,16 +57,18 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
                 continue;
 
             string[] values = line.Split(',');
-            string listName = listCol >= 0 && listCol < values.Length ? values[listCol].Trim() : string.Empty;
+            string listName = listCol >= 0 && listCol < values.Length ? values[listCol].Trim() : defaultListName;
+
             string itemName = itemCol >= 0 && itemCol < values.Length ? values[itemCol].Trim() : string.Empty;
             string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? values[qtyCol].Trim() : "0";
             int qty = 0;
             int.TryParse(qtyStr, out qty);
 
-            if (!string.IsNullOrEmpty(listName) && !string.IsNullOrEmpty(itemName))
-            {
-                manager.AddItem(listName, itemName, qty);
-            }
+            if (string.IsNullOrEmpty(itemName))
+                continue;
+
+            manager.AddItem(listName, itemName, qty);
+
         }
 
         Debug.Log("Loaded shopping lists from sheet");
