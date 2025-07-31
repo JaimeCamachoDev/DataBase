@@ -33,6 +33,15 @@ Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que pro
 El componente permite indicar en el inspector los encabezados de columna que corresponden al nombre de la lista, el artículo y la cantidad. De este modo puedes usar títulos personalizados en la primera fila de tu hoja de cálculo. Si no incluyes la columna de lista, todos los elementos se añadirán a la lista indicada en `defaultListName`.
 Estos componentes sirven como base para desarrollar la funcionalidad de la aplicación sin necesidad de recompilar cada vez que cambien los datos.
 
+### Gestión de la lista desde la interfaz
+
+Se han añadido dos scripts para manipular las listas en tiempo de ejecución:
+
+- **ShoppingListUI**: muestra el contenido del `ShoppingListManager` y permite añadir o eliminar elementos mediante campos de entrada y botones.
+- **GoogleSheetsShoppingListWriter**: envía los cambios a un script web para actualizar la hoja de cálculo mediante una petición `POST` en formato JSON.
+
+Vincula estos componentes a tu panel de UI para editar las listas desde Unity y mantener la hoja de cálculo sincronizada.
+
    
 <footer>
    
