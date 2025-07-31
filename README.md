@@ -16,14 +16,6 @@ _**Repositorio destinado a albergar los datos para acceder desde los poryectos e
 ### 📸 Social Preview
 - [ ] Sube una imagen `preview.png` personalizada en `Settings → Social Preview`.
 
-### ⚙️ Repository Features
-Desactiva funciones que no necesitas en `Settings → Features`:
-
-- [ ] Desactivar **Projects**
-- [ ] Desactivar **Wiki**
-- [ ] Desactivar **Packages**
-- [ ] Desactivar **Environments** (Deployments)
-- [ ] Confirmar que **Releases** sigue activado ✅
 
 ### 🎨 Personalización visual
 - [ ] Cambiar imagen del banner de portada.
