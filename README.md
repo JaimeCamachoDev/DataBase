@@ -1,6 +1,8 @@
 <header>
 
 ![Banner](https://github.com/user-attachments/assets/5b933a56-0ece-452a-99c0-1a641485a6b9)
+<img width="2416" height="2042" alt="Captura de pantalla 2023-09-22 a las 11 58 53" src="https://github.com/user-attachments/assets/c4be976a-a943-4879-bbd9-dccc1f5ae655" />
+<img width="3792" height="1312" alt="Captura de pantalla 2023-09-22 a las 11 59 32" src="https://github.com/user-attachments/assets/6dd315df-4d73-4f74-92cf-5854f105f358" />
 
 # **DataBase**
 
@@ -18,6 +20,7 @@ Este repositorio incluye un script de ejemplo (`GoogleSheetsReader`) para leer u
 4. Ejecuta la escena y el script descargará el contenido, mostrándolo en la consola. El script interpreta la primera fila como los encabezados de columna y mostrará cada registro usando esos títulos. Puedes adaptarlo para actualizar cualquier variable de tu juego.
 
 
+
 ## 🛒 Estructura base para una app de listas de la compra
 
 Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que proporcionan la estructura mínima para una aplicación de listas:
@@ -29,7 +32,6 @@ Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que pro
 
 La hoja debe tener las columnas `List`, `Item` y `Units` en la primera fila, pero puedes cambiar sus títulos modificando el script.
 Estos componentes sirven como base para desarrollar la funcionalidad de la aplicación sin necesidad de recompilar cada vez que cambien los datos.
-
    
 <footer>
    
