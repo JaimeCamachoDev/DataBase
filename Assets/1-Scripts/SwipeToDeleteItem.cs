@@ -56,7 +56,16 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IPointerUpH
         rectTransform.anchoredPosition = originalPos;
         isListening = false;
     }
+    
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        if (!isListening)
+            return;
 
+        Debug.Log("🔴 PointerUp: Cancelar swipe");
+        rectTransform.anchoredPosition = originalPos;
+        isListening = false;
+    }
 
 
     private void OnSwipePercentage(Dictionary<string, float> percentages)
