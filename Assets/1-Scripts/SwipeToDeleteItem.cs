@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler
+public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     private RectTransform rectTransform;
     private Vector2 originalPos;
@@ -33,6 +33,16 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler
     {
         isListening = true;
         Debug.Log("🟢 PointerDown: Escuchando swipe");
+    }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        if (!isListening)
+            return;
+
+        Debug.Log("🔴 PointerUp: Cancelar swipe");
+        rectTransform.anchoredPosition = originalPos;
+        isListening = false;
     }
 
     private void OnSwipePercentage(Dictionary<string, float> percentages)
