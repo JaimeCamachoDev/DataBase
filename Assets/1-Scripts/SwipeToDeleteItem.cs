@@ -10,6 +10,7 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IPointerUpH
     private Vector2 originalPos;
     private bool isListening = false;
     private bool hasMoved = false;
+    public ScrollRect scrollRect;
 
     [Header("Swipe Settings")]
     [SerializeField] private float deleteThreshold = 30f;
@@ -23,6 +24,19 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IPointerUpH
 
         originalPos = rectTransform.anchoredPosition;
     }
+
+    void Start()
+    {
+        scrollRect = GetComponent<ScrollRect>();
+        scrollRect.onValueChanged.AddListener(ListenerMethod);
+    }
+
+    public void ListenerMethod(Vector2 value)
+    {
+        Debug.Log("ListenerMethod: " + value);
+    }
+
+
 
     private void OnEnable()
     {
