@@ -6,7 +6,10 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Main.unity
+    path: Assets/3-Scenes/Main.unity
     guid: ff5702dfe30c34fa2a680f20ba104712
+  - enabled: 1
+    path: Assets/TouchScrollMenu/Scenes/TouchScrollMenu.unity
+    guid: c3bb23159283af74c82deb463573930f
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
