@@ -5,4 +5,5 @@ public class ShoppingItem
 {
     public string name;
     public int quantity;
+    public int position;
 }

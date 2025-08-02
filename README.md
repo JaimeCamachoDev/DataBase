@@ -24,10 +24,10 @@ Este repositorio incluye un script de ejemplo (`GoogleSheetsReader`) para leer u
 
 Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que proporcionan la estructura mínima para una aplicación de listas:
 
-- **ShoppingItem**: almacena el nombre del artículo y la cantidad.
+- **ShoppingItem**: almacena el nombre del artículo, la cantidad y la posición dentro de la lista.
 - **ShoppingList**: agrupa varios `ShoppingItem` bajo un nombre de lista.
 - **ShoppingListManager**: permite crear listas y añadir elementos desde código.
-- **GoogleSheetsShoppingListLoader**: lee una hoja de cálculo publicada en formato CSV e incorpora los datos al `ShoppingListManager`.
+- **GoogleSheetsShoppingListLoader**: lee una hoja de cálculo publicada en formato CSV e incorpora los datos al `ShoppingListManager`, con soporte opcional de recarga periódica.
 
 
 El componente permite indicar en el inspector los encabezados de columna que corresponden al nombre de la lista, el artículo y la cantidad. De este modo puedes usar títulos personalizados en la primera fila de tu hoja de cálculo. Si no incluyes la columna de lista, todos los elementos se añadirán a la lista indicada en `defaultListName`.
