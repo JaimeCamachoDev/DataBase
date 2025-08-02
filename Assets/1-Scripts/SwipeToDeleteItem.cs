@@ -1,19 +1,18 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler
 {
     private RectTransform rectTransform;
     private LayoutElement layoutElement;
+    private Vector2 startDragPos;
     private Vector2 originalPos;
-    private bool isListening = false;
-    private bool hasMoved = false;
-    public ScrollRect scrollRect;
+    private bool dragging = false;
 
     [Header("Swipe Settings")]
-    [SerializeField] private float deleteThreshold = 30f;
+    [SerializeField] private float deleteThreshold = 100f; // px para borrar
+    [SerializeField] private float returnSpeed = 10f;
 
     private void Awake()
     {
@@ -25,91 +24,50 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IPointerUpH
         originalPos = rectTransform.anchoredPosition;
     }
 
-    void Start()
-    {
-        scrollRect = GetComponent<ScrollRect>();
-        scrollRect.onValueChanged.AddListener(ListenerMethod);
-    }
-
-    public void ListenerMethod(Vector2 value)
-    {
-        Debug.Log("ListenerMethod: " + value);
-    }
-
-
-
-    private void OnEnable()
-    {
-        SwipeManager.OnOnSwipePercentage += OnSwipePercentage;
-        SwipeManager.OnSwipe += OnSwipeFinal;
-    }
-
-    private void OnDisable()
-    {
-        SwipeManager.OnOnSwipePercentage -= OnSwipePercentage;
-        SwipeManager.OnSwipe -= OnSwipeFinal;
-    }
-
     public void OnPointerDown(PointerEventData eventData)
     {
-        isListening = true;
-        hasMoved = false;
+        startDragPos = eventData.position;
         layoutElement.ignoreLayout = true;
-        originalPos = rectTransform.anchoredPosition;
-
-        Debug.Log($"🟢 PointerDown en {name}");
+        dragging = true;
+        Debug.Log("🟢 PointerDown - Empezar swipe");
     }
 
-
-    public void OnPointerUp(PointerEventData eventData)
+    public void OnDrag(PointerEventData eventData)
     {
-        if (!isListening)
-            return;
+        if (!dragging) return;
 
-        Debug.Log("🔴 PointerUp: Cancelar swipe");
-        rectTransform.anchoredPosition = originalPos;
-        isListening = false;
-    }
-    
-    private void OnSwipePercentage(Dictionary<string, float> percentages)
-    {
-        if (!isListening) return;
-
-        float left = percentages["Left"];
-        float right = percentages["Right"];
-        float offset = (right - left) * 5f; // Multiplicador visual
-
-        rectTransform.anchoredPosition = new Vector2(originalPos.x + offset, originalPos.y);
-
-        if (Mathf.Abs(offset) > 1f) hasMoved = true;
-
-        Debug.Log($"📈 {name} offset: {offset:F1} - posX: {rectTransform.anchoredPosition.x:F1}");
+        float deltaX = eventData.position.x - startDragPos.x;
+        rectTransform.anchoredPosition = new Vector2(originalPos.x + deltaX, originalPos.y);
     }
 
-    private void OnSwipeFinal(string direction)
+    public void OnEndDrag(PointerEventData eventData)
     {
-        if (!isListening || !hasMoved)
+        dragging = false;
+        float finalDelta = rectTransform.anchoredPosition.x - originalPos.x;
+
+        if (Mathf.Abs(finalDelta) >= deleteThreshold)
         {
-            layoutElement.ignoreLayout = false;
-            return;
-        }
-
-        float delta = originalPos.x - rectTransform.anchoredPosition.x;
-        Debug.Log($"🏁 {name} swipe: {direction} | deltaX = {delta:F1}");
-
-        if (direction == "Left" && delta > deleteThreshold)
-        {
-            Debug.Log("💥 Eliminando: " + name);
-            Destroy(gameObject);
+            Debug.Log("💥 Item eliminado por swipe");
+            Destroy(gameObject.transform.parent.gameObject);
         }
         else
         {
-            Debug.Log("↩️ Restaurando posición");
-            rectTransform.anchoredPosition = originalPos;
+            Debug.Log("↩️ Swipe cancelado, volver");
             layoutElement.ignoreLayout = false;
+            StartCoroutine(AnimateReturn());
         }
+    }
 
-        isListening = false;
-        hasMoved = false;
+    private System.Collections.IEnumerator AnimateReturn()
+    {
+        Vector2 current = rectTransform.anchoredPosition;
+        float t = 0;
+        while (t < 1f)
+        {
+            t += Time.deltaTime * returnSpeed;
+            rectTransform.anchoredPosition = Vector2.Lerp(current, originalPos, t);
+            yield return null;
+        }
+        rectTransform.anchoredPosition = originalPos;
     }
 }
