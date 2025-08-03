@@ -9,7 +9,6 @@ public class ShoppingListItemUI : MonoBehaviour
 
     // Expose the data this prefab represents
     public ShoppingListManager manager;
-    public GoogleSheetsShoppingListWriter writer;
     public string listName;
     public ShoppingItem item;
 
@@ -28,17 +27,13 @@ public class ShoppingListItemUI : MonoBehaviour
     {
         if (manager == null)
             manager = FindAnyObjectByType<ShoppingListManager>();
-        if (writer == null)
-            writer = FindAnyObjectByType<GoogleSheetsShoppingListWriter>();
         Refresh();
     }
 
-    public void Setup(ShoppingListManager manager, GoogleSheetsShoppingListWriter writer, string listName, ShoppingItem item)
+    public void Setup(ShoppingListManager manager, string listName, ShoppingItem item)
     {
         if (manager != null)
             this.manager = manager;
-        if (writer != null)
-            this.writer = writer;
         this.listName = listName;
         this.item = item;
         if (this.item != null)
@@ -61,8 +56,6 @@ public class ShoppingListItemUI : MonoBehaviour
         if (manager != null)
         {
             manager.RemoveItem(listName, item.name);
-            if (writer != null)
-                writer.UploadList(manager);
         }
     }
 
@@ -70,10 +63,9 @@ public class ShoppingListItemUI : MonoBehaviour
     {
         if (manager != null)
         {
-            manager.SetItemCompleted(listName, item.name, true);
+            // Toggle the completed state so repeated swipes can undo
+            manager.SetItemCompleted(listName, item.name, !item.completed);
             Refresh();
-            if (writer != null)
-                writer.UploadList(manager);
         }
     }
 

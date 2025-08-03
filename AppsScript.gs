@@ -1,14 +1,24 @@
 function doGet() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   const data = sheet.getDataRange().getValues();
-  const headers = data.shift();
+  if (data.length === 0) {
+    return ContentService.createTextOutput(JSON.stringify({ lists: [] }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  const headers = data.shift().map(h => h.toString().trim());
+  const listIdx = headers.indexOf('List');
+  const itemIdx = headers.indexOf('Item');
+  const qtyIdx = headers.indexOf('Units');
+  const posIdx = headers.indexOf('Position');
+  const completedIdx = headers.indexOf('Completed');
   const lists = {};
   data.forEach(row => {
-    const listName = row[0];
-    const itemName = row[1];
-    const quantity = row[2];
-    const position = row[3];
-    const completed = row[4];
+    const listName = listIdx >= 0 ? row[listIdx] : 'List';
+    const itemName = itemIdx >= 0 ? row[itemIdx] : '';
+    if (!itemName) return;
+    const quantity = qtyIdx >= 0 ? row[qtyIdx] : 0;
+    const position = posIdx >= 0 ? row[posIdx] : -1;
+    const completed = completedIdx >= 0 ? row[completedIdx] : false;
     if (!lists[listName]) {
       lists[listName] = { name: listName, items: [] };
     }

@@ -70,13 +70,18 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         if (lines.Length == 0)
             yield break;
 
-        string[] headers = lines[0].Split(',');
+        // Trim the header line and each column title to avoid issues with
+        // Windows line endings or extra whitespace that prevent column
+        // detection (e.g. "Units\r" not matching "Units").
+        string[] headers = lines[0].Trim().Split(',');
+        for (int i = 0; i < headers.Length; i++)
+            headers[i] = StripQuotes(headers[i]);
+
         int listCol = System.Array.IndexOf(headers, listHeader);
         int itemCol = System.Array.IndexOf(headers, itemHeader);
         int qtyCol = System.Array.IndexOf(headers, quantityHeader);
         int posCol = System.Array.IndexOf(headers, positionHeader);
         int completedCol = System.Array.IndexOf(headers, completedHeader);
-
         manager.BeginUpdate();
         manager.Clear();
 

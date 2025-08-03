@@ -49,13 +49,13 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
         dragging = false;
         float finalDelta = rectTransform.anchoredPosition.x - originalPos.x;
 
-        if (finalDelta >= deleteThreshold)
+        if (finalDelta <= -deleteThreshold)
         {
             Debug.Log("💥 Item eliminado por swipe");
             onDelete.Invoke();
             Destroy(gameObject.transform.parent.gameObject);
         }
-        else if (finalDelta <= -deleteThreshold)
+        else if (finalDelta >= deleteThreshold)
         {
             Debug.Log("✅ Item completado por swipe");
             layoutElement.ignoreLayout = false;

@@ -5,8 +5,34 @@ using UnityEngine.Networking;
 
 public class GoogleSheetsShoppingListWriter : MonoBehaviour
 {
-    [Tooltip("URL of the Apps Script that updates the sheet")] 
+    [Tooltip("URL of the Apps Script that updates the sheet")]
     public string scriptUrl;
+
+    [Tooltip("Manager whose data will be uploaded")]
+    public ShoppingListManager manager;
+
+    void Start()
+    {
+        if (manager == null)
+            manager = FindAnyObjectByType<ShoppingListManager>();
+        if (manager != null)
+        {
+            manager.ListsChanged += OnListsChanged;
+            // Push current data so new columns like Position/Completed exist
+            UploadList(manager);
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (manager != null)
+            manager.ListsChanged -= OnListsChanged;
+    }
+
+    void OnListsChanged()
+    {
+        UploadList(manager);
+    }
 
     public void UploadList(ShoppingListManager manager)
     {
