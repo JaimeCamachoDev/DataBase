@@ -63,7 +63,8 @@ public class ShoppingListItemUI : MonoBehaviour
     {
         if (manager != null)
         {
-            manager.SetItemCompleted(listName, item.name, true);
+            // Toggle the completed state so repeated swipes can undo
+            manager.SetItemCompleted(listName, item.name, !item.completed);
             Refresh();
         }
     }

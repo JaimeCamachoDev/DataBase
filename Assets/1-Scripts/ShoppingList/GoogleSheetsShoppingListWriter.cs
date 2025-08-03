@@ -16,7 +16,11 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
         if (manager == null)
             manager = FindAnyObjectByType<ShoppingListManager>();
         if (manager != null)
+        {
             manager.ListsChanged += OnListsChanged;
+            // Push current data so new columns like Position/Completed exist
+            UploadList(manager);
+        }
     }
 
     void OnDestroy()
