@@ -36,7 +36,7 @@ public class ShoppingListManager : MonoBehaviour
         NotifyChanged();
     }
 
-    public void AddItem(string listName, string itemName, int quantity, int position = -1, int row = -1, int column = -1)
+    public void AddItem(string listName, string itemName, int quantity, int position = -1, int row = -1, int column = -1, bool completed = false)
     {
         var list = lists.Find(l => l.name == listName);
         if (list == null)
@@ -49,6 +49,7 @@ public class ShoppingListManager : MonoBehaviour
         {
             name = itemName,
             quantity = quantity,
+            completed = completed,
             listName = listName,
             row = row,
             column = column
@@ -62,6 +63,18 @@ public class ShoppingListManager : MonoBehaviour
         for (int i = 0; i < list.items.Count; i++)
             list.items[i].position = i;
 
+        NotifyChanged();
+    }
+
+    public void SetItemCompleted(string listName, string itemName, bool completed)
+    {
+        var list = lists.Find(l => l.name == listName);
+        if (list == null) return;
+
+        var item = list.items.Find(i => i.name == itemName);
+        if (item == null) return;
+
+        item.completed = completed;
         NotifyChanged();
     }
 
