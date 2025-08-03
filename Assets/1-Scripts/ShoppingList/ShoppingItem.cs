@@ -5,6 +5,7 @@ public class ShoppingItem
 {
     public string name;
     public int quantity;
+    public bool completed;
     public int position;
     // Name of the list this item belongs to
     public string listName;
