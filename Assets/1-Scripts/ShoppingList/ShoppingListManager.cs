@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -5,9 +6,34 @@ public class ShoppingListManager : MonoBehaviour
 {
     public List<ShoppingList> lists = new List<ShoppingList>();
 
+    public event Action ListsChanged;
+
+    bool suppressEvents = false;
+
+    void NotifyChanged()
+    {
+        if (!suppressEvents)
+            ListsChanged?.Invoke();
+    }
+
+    public void BeginUpdate() => suppressEvents = true;
+
+    public void EndUpdate()
+    {
+        suppressEvents = false;
+        NotifyChanged();
+    }
+
+    public void Clear()
+    {
+        lists.Clear();
+        NotifyChanged();
+    }
+
     public void AddList(string name)
     {
         lists.Add(new ShoppingList { name = name });
+        NotifyChanged();
     }
 
     public void AddItem(string listName, string itemName, int quantity, int position = -1)
@@ -28,6 +54,9 @@ public class ShoppingListManager : MonoBehaviour
 
         for (int i = 0; i < list.items.Count; i++)
             list.items[i].position = i;
+
+        NotifyChanged();
+        
     }
 
     public void RemoveItem(string listName, string itemName)
@@ -42,5 +71,8 @@ public class ShoppingListManager : MonoBehaviour
 
         for (int i = 0; i < list.items.Count; i++)
             list.items[i].position = i;
+
+        NotifyChanged();
+        
     }
 }

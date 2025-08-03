@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler
 {
@@ -13,6 +14,8 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
     [Header("Swipe Settings")]
     [SerializeField] private float deleteThreshold = 100f; // px para borrar
     [SerializeField] private float returnSpeed = 10f;
+
+    public UnityEvent onDelete = new UnityEvent();
 
     private void Awake()
     {
@@ -48,6 +51,7 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
         if (Mathf.Abs(finalDelta) >= deleteThreshold)
         {
             Debug.Log("💥 Item eliminado por swipe");
+            onDelete.Invoke();
             Destroy(gameObject.transform.parent.gameObject);
         }
         else

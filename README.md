@@ -35,12 +35,13 @@ Estos componentes sirven como base para desarrollar la funcionalidad de la aplic
 
 ### Gestión de la lista desde la interfaz
 
-Se han añadido dos scripts para manipular las listas en tiempo de ejecución:
+Se han añadido scripts para manipular y visualizar las listas en tiempo de ejecución:
 
-- **ShoppingListUI**: muestra el contenido del `ShoppingListManager` y permite añadir o eliminar elementos mediante campos de entrada y botones.
+- **ShoppingListUI**: instancia un prefab por cada artículo del `ShoppingListManager` dentro de un contenedor y permite añadir o eliminar elementos mediante campos de entrada y botones.
+- **ShoppingListItemUI**: configura los textos del prefab y, gracias al nuevo evento `onDelete` de `SwipeToDeleteItem`, al eliminarse también actualiza el gestor y la hoja de cálculo.
 - **GoogleSheetsShoppingListWriter**: envía los cambios a un script web para actualizar la hoja de cálculo mediante una petición `POST` en formato JSON.
 
-Vincula estos componentes a tu panel de UI para editar las listas desde Unity y mantener la hoja de cálculo sincronizada.
+Vincula estos componentes a tu panel de UI, asigna el prefab de item y tendrás la interfaz sincronizada con la hoja de cálculo de Google.
 
    
 <footer>

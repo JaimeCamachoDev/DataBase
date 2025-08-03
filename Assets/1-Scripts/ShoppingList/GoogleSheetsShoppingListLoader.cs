@@ -41,7 +41,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     public void Refresh()
     {
         if (manager == null) return;
-        manager.lists.Clear();
+
         StartCoroutine(Load());
     }
 
@@ -75,6 +75,8 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         int qtyCol = System.Array.IndexOf(headers, quantityHeader);
         int posCol = System.Array.IndexOf(headers, positionHeader);
 
+        manager.BeginUpdate();
+        manager.Clear();
 
         for (int i = 1; i < lines.Length; i++)
         {
@@ -100,6 +102,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
 
         }
 
+        manager.EndUpdate();
         Debug.Log("Loaded shopping lists from sheet");
     }
 }

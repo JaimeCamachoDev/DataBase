@@ -1,4 +1,3 @@
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,12 +9,21 @@ public class ShoppingListUI : MonoBehaviour
     public InputField itemInput;
     public InputField quantityInput;
     public InputField positionInput;
-    public Text displayText;
+    public Transform itemContainer;
+    public GameObject itemPrefab;
     public GoogleSheetsShoppingListWriter writer;
 
     void Start()
     {
-        RefreshDisplay();
+        if (manager != null)
+            manager.ListsChanged += RebuildItems;
+        RebuildItems();
+    }
+
+    void OnDestroy()
+    {
+        if (manager != null)
+            manager.ListsChanged -= RebuildItems;
     }
 
     public void AddItem()
@@ -30,7 +38,6 @@ public class ShoppingListUI : MonoBehaviour
         if (positionInput != null)
             int.TryParse(positionInput.text, out pos);
         manager.AddItem(listName, itemName, qty, pos);
-        RefreshDisplay();
         if (writer != null)
             writer.UploadList(manager);
     }
@@ -40,23 +47,28 @@ public class ShoppingListUI : MonoBehaviour
         if (manager == null) return;
         string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
         manager.RemoveItem(listName, itemInput.text);
-        RefreshDisplay();
+        
         if (writer != null)
             writer.UploadList(manager);
     }
 
-    public void RefreshDisplay()
+    public void RebuildItems()
     {
-        if (displayText == null || manager == null) return;
-        StringBuilder sb = new StringBuilder();
+        if (manager == null || itemContainer == null || itemPrefab == null) return;
+
+        foreach (Transform child in itemContainer)
+            Destroy(child.gameObject);
+
         foreach (var list in manager.lists)
         {
-            sb.AppendLine(list.name);
             foreach (var item in list.items)
             {
-                sb.AppendFormat("{0}. {1} ({2})\n", item.position, item.name, item.quantity);
+                GameObject go = Instantiate(itemPrefab, itemContainer);
+                go.transform.SetSiblingIndex(item.position);
+                var ui = go.GetComponent<ShoppingListItemUI>();
+                if (ui != null)
+                    ui.Setup(manager, writer, list.name, item);
             }
         }
-        displayText.text = sb.ToString();
     }
 }
