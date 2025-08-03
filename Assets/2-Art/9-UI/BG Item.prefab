@@ -78,7 +78,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 0
+  m_Text: '
+
+'
 --- !u!1 &2236870956846000126
 GameObject:
   m_ObjectHideFlags: 0
@@ -521,7 +523,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Item
+  m_Text: 
 --- !u!1 &6915513173972347784
 GameObject:
   m_ObjectHideFlags: 0
@@ -701,6 +703,16 @@ MonoBehaviour:
   nameText: {fileID: 3751097673640562700}
   quantityText: {fileID: 4000928211873013698}
   swipe: {fileID: 6721773495753771147}
+  manager: {fileID: 0}
+  writer: {fileID: 0}
+  listName: Lists
+  item:
+    name: 
+    quantity: 0
+    position: 0
+    listName: 
+    row: 0
+    column: 0
 --- !u!1 &7885057962511890851
 GameObject:
   m_ObjectHideFlags: 0

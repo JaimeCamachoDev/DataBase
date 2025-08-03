@@ -13,6 +13,14 @@ public class ShoppingListItemUI : MonoBehaviour
     public string listName;
     public ShoppingItem item;
 
+
+
+    public void Start()
+    {
+        manager = FindAnyObjectByType<ShoppingListManager>();
+        writer = FindAnyObjectByType<GoogleSheetsShoppingListWriter>();
+    }
+
     public void Setup(ShoppingListManager manager, GoogleSheetsShoppingListWriter writer, string listName, ShoppingItem item)
     {
         this.manager = manager;
