@@ -33,9 +33,11 @@ function doPost(e) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   sheet.clear();
   sheet.appendRow(['List', 'Item', 'Units', 'Position', 'Completed']);
-  data.lists.forEach(list => {
-    list.items.forEach(item => {
-      sheet.appendRow([list.name, item.name, item.quantity, item.position, item.completed]);
+  data.lists.forEach(function(list) {
+    list.items.forEach(function(item, index) {
+      const pos = (item.position !== undefined && item.position !== null) ? item.position : index;
+      const completed = item.completed === true || item.completed === 'true';
+      sheet.appendRow([list.name, item.name, item.quantity, pos, completed]);
     });
   });
   return ContentService.createTextOutput('OK');
