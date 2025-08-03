@@ -18,7 +18,10 @@ function doGet() {
     if (!itemName) return;
     const quantity = qtyIdx >= 0 ? row[qtyIdx] : 0;
     const position = posIdx >= 0 ? row[posIdx] : -1;
-    const completed = completedIdx >= 0 ? row[completedIdx] : false;
+    const rawCompleted = completedIdx >= 0 ? row[completedIdx] : false;
+    const completed = typeof rawCompleted === 'string'
+      ? rawCompleted.toLowerCase() === 'true'
+      : rawCompleted === true;
     if (!lists[listName]) {
       lists[listName] = { name: listName, items: [] };
     }
@@ -37,7 +40,7 @@ function doPost(e) {
     list.items.forEach(function(item, index) {
       const pos = (item.position !== undefined && item.position !== null) ? item.position : index;
       const completed = item.completed === true || item.completed === 'true';
-      sheet.appendRow([list.name, item.name, item.quantity, pos, completed]);
+      sheet.appendRow([list.name, item.name, item.quantity, pos, completed ? 'true' : 'false']);
     });
   });
   return ContentService.createTextOutput('OK');
