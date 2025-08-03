@@ -64,7 +64,7 @@ public class ShoppingListUI : MonoBehaviour
             {
                 GameObject go = Instantiate(itemPrefab, itemContainer);
                 go.transform.SetSiblingIndex(item.position);
-                var ui = go.GetComponent<ShoppingListItemUI>();
+                var ui = go.GetComponentInChildren<ShoppingListItemUI>();
                 if (ui != null)
                     ui.Setup(manager, writer, list.name, item);
             }

@@ -38,7 +38,8 @@ Estos componentes sirven como base para desarrollar la funcionalidad de la aplic
 Se han añadido scripts para manipular y visualizar las listas en tiempo de ejecución:
 
 - **ShoppingListUI**: instancia un prefab por cada artículo del `ShoppingListManager` dentro de un contenedor y permite añadir o eliminar elementos mediante campos de entrada y botones.
-- **ShoppingListItemUI**: configura los textos del prefab y, gracias al nuevo evento `onDelete` de `SwipeToDeleteItem`, al eliminarse también actualiza el gestor y la hoja de cálculo.
+- **ShoppingListItemUI**: configura los textos del prefab y, gracias al nuevo evento `onDelete` de `SwipeToDeleteItem`, al eliminarse también actualiza el gestor y la hoja de cálculo. Si no se le asignan referencias al gestor o al escritor, las buscará en la escena al iniciarse.
+- **Rebuild automático**: `ShoppingListUI` ahora detecta el componente `ShoppingListItemUI` aunque se encuentre en un objeto hijo del prefab instanciado.
 - **GoogleSheetsShoppingListWriter**: envía los cambios a un script web para actualizar la hoja de cálculo mediante una petición `POST` en formato JSON.
 
 Vincula estos componentes a tu panel de UI, asigna el prefab de item y tendrás la interfaz sincronizada con la hoja de cálculo de Google.

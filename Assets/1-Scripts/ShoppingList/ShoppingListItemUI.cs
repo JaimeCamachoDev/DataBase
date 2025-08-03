@@ -13,28 +13,35 @@ public class ShoppingListItemUI : MonoBehaviour
     public string listName;
     public ShoppingItem item;
 
-
-
-    public void Start()
+    void Awake()
     {
-        manager = FindAnyObjectByType<ShoppingListManager>();
-        writer = FindAnyObjectByType<GoogleSheetsShoppingListWriter>();
-    }
-
-    public void Setup(ShoppingListManager manager, GoogleSheetsShoppingListWriter writer, string listName, ShoppingItem item)
-    {
-        this.manager = manager;
-        this.writer = writer;
-        this.listName = listName;
-        this.item = item;
-        this.item.listName = listName;
-
-        Refresh();
-
         if (swipe == null)
             swipe = GetComponentInChildren<SwipeToDeleteItem>();
         if (swipe != null)
             swipe.onDelete.AddListener(OnDelete);
+    }
+
+    void Start()
+    {
+        if (manager == null)
+            manager = FindAnyObjectByType<ShoppingListManager>();
+        if (writer == null)
+            writer = FindAnyObjectByType<GoogleSheetsShoppingListWriter>();
+        Refresh();
+    }
+
+    public void Setup(ShoppingListManager manager, GoogleSheetsShoppingListWriter writer, string listName, ShoppingItem item)
+    {
+        if (manager != null)
+            this.manager = manager;
+        if (writer != null)
+            this.writer = writer;
+        this.listName = listName;
+        this.item = item;
+        if (this.item != null)
+            this.item.listName = listName;
+
+        Refresh();
     }
 
     // Update texts to reflect the current item data
