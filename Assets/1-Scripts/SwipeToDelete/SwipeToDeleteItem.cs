@@ -16,6 +16,7 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
     [SerializeField] private float returnSpeed = 10f;
 
     public UnityEvent onDelete = new UnityEvent();
+    public UnityEvent onComplete = new UnityEvent();
 
     private void Awake()
     {
@@ -48,11 +49,17 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
         dragging = false;
         float finalDelta = rectTransform.anchoredPosition.x - originalPos.x;
 
-        if (Mathf.Abs(finalDelta) >= deleteThreshold)
+        if (finalDelta >= deleteThreshold)
         {
             Debug.Log("💥 Item eliminado por swipe");
             onDelete.Invoke();
             Destroy(gameObject.transform.parent.gameObject);
+        }
+        else if (finalDelta <= -deleteThreshold)
+        {
+            Debug.Log("✅ Item completado por swipe");
+            layoutElement.ignoreLayout = false;
+            onComplete.Invoke();
         }
         else
         {
