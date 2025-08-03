@@ -6,4 +6,9 @@ public class ShoppingItem
     public string name;
     public int quantity;
     public int position;
+    // Name of the list this item belongs to
+    public string listName;
+    // Row and column location inside the Google Sheet (1-based indexes)
+    public int row;
+    public int column;
 }
