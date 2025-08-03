@@ -12,7 +12,6 @@ public class ShoppingListUI : MonoBehaviour
     public Transform itemContainer;
     public Transform completedItemContainer;
     public GameObject itemPrefab;
-    public GoogleSheetsShoppingListWriter writer;
 
     void Start()
     {
@@ -39,8 +38,6 @@ public class ShoppingListUI : MonoBehaviour
         if (positionInput != null)
             int.TryParse(positionInput.text, out pos);
         manager.AddItem(listName, itemName, qty, pos);
-        if (writer != null)
-            writer.UploadList(manager);
     }
 
     public void RemoveItem()
@@ -48,8 +45,6 @@ public class ShoppingListUI : MonoBehaviour
         if (manager == null) return;
         string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
         manager.RemoveItem(listName, itemInput.text);
-        if (writer != null)
-            writer.UploadList(manager);
     }
 
     public void RebuildItems()
@@ -73,7 +68,7 @@ public class ShoppingListUI : MonoBehaviour
                 go.transform.SetSiblingIndex(item.position);
                 var ui = go.GetComponentInChildren<ShoppingListItemUI>();
                 if (ui != null)
-                    ui.Setup(manager, writer, list.name, item);
+                    ui.Setup(manager, list.name, item);
             }
         }
     }
