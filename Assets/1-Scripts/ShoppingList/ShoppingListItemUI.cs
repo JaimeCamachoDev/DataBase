@@ -18,7 +18,10 @@ public class ShoppingListItemUI : MonoBehaviour
         if (swipe == null)
             swipe = GetComponentInChildren<SwipeToDeleteItem>();
         if (swipe != null)
+        {
             swipe.onDelete.AddListener(OnDelete);
+            swipe.onComplete.AddListener(OnComplete);
+        }
     }
 
     void Start()
@@ -63,9 +66,23 @@ public class ShoppingListItemUI : MonoBehaviour
         }
     }
 
+    void OnComplete()
+    {
+        if (manager != null)
+        {
+            manager.SetItemCompleted(listName, item.name, true);
+            Refresh();
+            if (writer != null)
+                writer.UploadList(manager);
+        }
+    }
+
     void OnDestroy()
     {
         if (swipe != null)
+        {
             swipe.onDelete.RemoveListener(OnDelete);
+            swipe.onComplete.RemoveListener(OnComplete);
+        }
     }
 }
