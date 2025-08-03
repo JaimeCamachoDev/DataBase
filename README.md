@@ -24,10 +24,10 @@ Este repositorio incluye un script de ejemplo (`GoogleSheetsReader`) para leer u
 
 Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que proporcionan la estructura mínima para una aplicación de listas:
 
-- **ShoppingItem**: almacena el nombre del artículo y la cantidad.
+- **ShoppingItem**: almacena el nombre del artículo, la cantidad y la posición dentro de la lista.
 - **ShoppingList**: agrupa varios `ShoppingItem` bajo un nombre de lista.
 - **ShoppingListManager**: permite crear listas y añadir elementos desde código.
-- **GoogleSheetsShoppingListLoader**: lee una hoja de cálculo publicada en formato CSV e incorpora los datos al `ShoppingListManager`.
+- **GoogleSheetsShoppingListLoader**: lee una hoja de cálculo publicada en formato CSV e incorpora los datos al `ShoppingListManager`, con soporte opcional de recarga periódica.
 
 
 El componente permite indicar en el inspector los encabezados de columna que corresponden al nombre de la lista, el artículo y la cantidad. De este modo puedes usar títulos personalizados en la primera fila de tu hoja de cálculo. Si no incluyes la columna de lista, todos los elementos se añadirán a la lista indicada en `defaultListName`.
@@ -35,12 +35,13 @@ Estos componentes sirven como base para desarrollar la funcionalidad de la aplic
 
 ### Gestión de la lista desde la interfaz
 
-Se han añadido dos scripts para manipular las listas en tiempo de ejecución:
+Se han añadido scripts para manipular y visualizar las listas en tiempo de ejecución:
 
-- **ShoppingListUI**: muestra el contenido del `ShoppingListManager` y permite añadir o eliminar elementos mediante campos de entrada y botones.
+- **ShoppingListUI**: instancia un prefab por cada artículo del `ShoppingListManager` dentro de un contenedor y permite añadir o eliminar elementos mediante campos de entrada y botones.
+- **ShoppingListItemUI**: configura los textos del prefab y, gracias al nuevo evento `onDelete` de `SwipeToDeleteItem`, al eliminarse también actualiza el gestor y la hoja de cálculo.
 - **GoogleSheetsShoppingListWriter**: envía los cambios a un script web para actualizar la hoja de cálculo mediante una petición `POST` en formato JSON.
 
-Vincula estos componentes a tu panel de UI para editar las listas desde Unity y mantener la hoja de cálculo sincronizada.
+Vincula estos componentes a tu panel de UI, asigna el prefab de item y tendrás la interfaz sincronizada con la hoja de cálculo de Google.
 
    
 <footer>
