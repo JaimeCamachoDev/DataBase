@@ -1,14 +1,15 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class ShoppingListUI : MonoBehaviour
 {
     [Header("References")]
     public ShoppingListManager manager;
-    public InputField listInput;
-    public InputField itemInput;
-    public InputField quantityInput;
-    public InputField positionInput;
+    public TMP_InputField listInput;
+    public TMP_InputField itemInput;
+    public TMP_InputField quantityInput;
+    public TMP_InputField positionInput;
     public Transform itemContainer;
     public Transform completedItemContainer;
     public GameObject itemPrefab;
@@ -71,5 +72,14 @@ public class ShoppingListUI : MonoBehaviour
                     ui.Setup(manager, list.name, item);
             }
         }
+
+        Canvas.ForceUpdateCanvases();
+        var parentRect = itemContainer != null ? itemContainer.parent as RectTransform : null;
+        if (itemContainer != null)
+            LayoutRebuilder.ForceRebuildLayoutImmediate(itemContainer as RectTransform);
+        if (completedItemContainer != null)
+            LayoutRebuilder.ForceRebuildLayoutImmediate(completedItemContainer as RectTransform);
+        if (parentRect != null)
+            LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
     }
 }
