@@ -163,6 +163,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   androidMinAspectRatio: 1
   applicationIdentifier:
+    Android: com.JaimeCamachoDev.URPTemplate
     Standalone: com.Keijiro.URP-Template
   buildNumber:
     Bratwurst: 0

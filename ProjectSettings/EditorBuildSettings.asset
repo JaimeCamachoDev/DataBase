@@ -8,8 +8,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/3-Scenes/Main.unity
     guid: ff5702dfe30c34fa2a680f20ba104712
-  - enabled: 1
+  - enabled: 0
     path: Assets/TouchScrollMenu/Scenes/TouchScrollMenu.unity
     guid: c3bb23159283af74c82deb463573930f
+  - enabled: 0
+    path: Assets/Drag and Drop/Test.unity
+    guid: 3fc3c1c1b65841a4ea122b524326d44d
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
