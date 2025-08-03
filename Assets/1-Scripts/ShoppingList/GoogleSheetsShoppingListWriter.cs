@@ -16,7 +16,24 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
 
     IEnumerator UploadCoroutine(List<ShoppingList> lists)
     {
-        var wrapper = new Wrapper { lists = lists };
+        var serializableLists = new List<SerializableList>();
+        foreach (var list in lists)
+        {
+            var sList = new SerializableList { name = list.name, items = new List<SerializableItem>() };
+            foreach (var item in list.items)
+            {
+                sList.items.Add(new SerializableItem
+                {
+                    name = item.name,
+                    quantity = item.quantity,
+                    position = item.position,
+                    completed = item.completed
+                });
+            }
+            serializableLists.Add(sList);
+        }
+
+        var wrapper = new Wrapper { lists = serializableLists };
         string json = JsonUtility.ToJson(wrapper);
         byte[] data = System.Text.Encoding.UTF8.GetBytes(json);
         UnityWebRequest request = new UnityWebRequest(scriptUrl, "POST");
@@ -33,6 +50,22 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
     [System.Serializable]
     class Wrapper
     {
-        public List<ShoppingList> lists;
+        public List<SerializableList> lists;
+    }
+
+    [System.Serializable]
+    class SerializableList
+    {
+        public string name;
+        public List<SerializableItem> items;
+    }
+
+    [System.Serializable]
+    class SerializableItem
+    {
+        public string name;
+        public int quantity;
+        public int position;
+        public bool completed;
     }
 }
