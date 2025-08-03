@@ -8,10 +8,11 @@ function doGet() {
     const itemName = row[1];
     const quantity = row[2];
     const position = row[3];
+    const completed = row[4];
     if (!lists[listName]) {
       lists[listName] = { name: listName, items: [] };
     }
-    lists[listName].items.push({ name: itemName, quantity: quantity, position: position });
+    lists[listName].items.push({ name: itemName, quantity: quantity, position: position, completed: completed });
   });
   return ContentService.createTextOutput(JSON.stringify({ lists: Object.values(lists) }))
     .setMimeType(ContentService.MimeType.JSON);
@@ -21,10 +22,10 @@ function doPost(e) {
   const data = JSON.parse(e.postData.contents);
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   sheet.clear();
-  sheet.appendRow(['List', 'Item', 'Units', 'Position']);
+  sheet.appendRow(['List', 'Item', 'Units', 'Position', 'Completed']);
   data.lists.forEach(list => {
     list.items.forEach(item => {
-      sheet.appendRow([list.name, item.name, item.quantity, item.position]);
+      sheet.appendRow([list.name, item.name, item.quantity, item.position, item.completed]);
     });
   });
   return ContentService.createTextOutput('OK');

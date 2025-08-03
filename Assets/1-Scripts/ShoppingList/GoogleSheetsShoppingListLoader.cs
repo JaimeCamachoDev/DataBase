@@ -20,6 +20,8 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     public string quantityHeader = "Units";
     [Tooltip("Column used for the item position (optional)")]
     public string positionHeader = "Position";
+    [Tooltip("Column used for the item completion state (optional)")]
+    public string completedHeader = "Completed";
     [Tooltip("Name used when no list column is present")]
     public string defaultListName = "List";
 
@@ -73,6 +75,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         int itemCol = System.Array.IndexOf(headers, itemHeader);
         int qtyCol = System.Array.IndexOf(headers, quantityHeader);
         int posCol = System.Array.IndexOf(headers, positionHeader);
+        int completedCol = System.Array.IndexOf(headers, completedHeader);
 
         manager.BeginUpdate();
         manager.Clear();
@@ -89,17 +92,20 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             string itemName = itemCol >= 0 && itemCol < values.Length ? StripQuotes(values[itemCol]) : string.Empty;
             string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? StripQuotes(values[qtyCol]) : "0";
             string posStr = posCol >= 0 && posCol < values.Length ? StripQuotes(values[posCol]) : "-1";
+            string completedStr = completedCol >= 0 && completedCol < values.Length ? StripQuotes(values[completedCol]) : "false";
             int qty = 0;
             int.TryParse(qtyStr, out qty);
             int pos = -1;
             int.TryParse(posStr, out pos);
+            bool completed = false;
+            bool.TryParse(completedStr, out completed);
 
             if (string.IsNullOrEmpty(itemName))
                 continue;
 
             int row = i + 1; // 1-based row index including header
             int column = itemCol >= 0 ? itemCol + 1 : -1;
-            manager.AddItem(listName, itemName, qty, pos, row, column);
+            manager.AddItem(listName, itemName, qty, pos, row, column, completed);
         }
 
         manager.EndUpdate();
