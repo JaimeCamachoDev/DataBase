@@ -84,11 +84,11 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
                 continue;
 
             string[] values = line.Split(',');
-            string listName = listCol >= 0 && listCol < values.Length ? values[listCol].Trim() : defaultListName;
+            string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : defaultListName;
 
-            string itemName = itemCol >= 0 && itemCol < values.Length ? values[itemCol].Trim() : string.Empty;
-            string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? values[qtyCol].Trim() : "0";
-            string posStr = posCol >= 0 && posCol < values.Length ? values[posCol].Trim() : "-1";
+            string itemName = itemCol >= 0 && itemCol < values.Length ? StripQuotes(values[itemCol]) : string.Empty;
+            string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? StripQuotes(values[qtyCol]) : "0";
+            string posStr = posCol >= 0 && posCol < values.Length ? StripQuotes(values[posCol]) : "-1";
             int qty = 0;
             int.TryParse(qtyStr, out qty);
             int pos = -1;
@@ -104,5 +104,10 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
 
         manager.EndUpdate();
         Debug.Log("Loaded shopping lists from sheet");
+    }
+
+    private static string StripQuotes(string value)
+    {
+        return value.Trim().Trim('"');
     }
 }
