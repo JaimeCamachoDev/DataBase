@@ -56,6 +56,7 @@ public class ShoppingListManager : MonoBehaviour
             list.items[i].position = i;
 
         NotifyChanged();
+        
     }
 
     public void RemoveItem(string listName, string itemName)
@@ -72,5 +73,6 @@ public class ShoppingListManager : MonoBehaviour
             list.items[i].position = i;
 
         NotifyChanged();
+        
     }
 }

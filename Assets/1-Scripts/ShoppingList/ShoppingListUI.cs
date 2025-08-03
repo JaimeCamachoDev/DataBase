@@ -47,6 +47,7 @@ public class ShoppingListUI : MonoBehaviour
         if (manager == null) return;
         string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
         manager.RemoveItem(listName, itemInput.text);
+        
         if (writer != null)
             writer.UploadList(manager);
     }

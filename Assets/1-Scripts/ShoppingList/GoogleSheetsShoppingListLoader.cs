@@ -41,6 +41,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     public void Refresh()
     {
         if (manager == null) return;
+
         StartCoroutine(Load());
     }
 
@@ -98,6 +99,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
                 continue;
 
             manager.AddItem(listName, itemName, qty, pos);
+
         }
 
         manager.EndUpdate();
