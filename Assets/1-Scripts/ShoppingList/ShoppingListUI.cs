@@ -10,6 +10,7 @@ public class ShoppingListUI : MonoBehaviour
     public InputField quantityInput;
     public InputField positionInput;
     public Transform itemContainer;
+    public Transform completedItemContainer;
     public GameObject itemPrefab;
     public GoogleSheetsShoppingListWriter writer;
 
@@ -57,12 +58,18 @@ public class ShoppingListUI : MonoBehaviour
 
         foreach (Transform child in itemContainer)
             Destroy(child.gameObject);
+        if (completedItemContainer != null)
+        {
+            foreach (Transform child in completedItemContainer)
+                Destroy(child.gameObject);
+        }
 
         foreach (var list in manager.lists)
         {
             foreach (var item in list.items)
             {
-                GameObject go = Instantiate(itemPrefab, itemContainer);
+                Transform parent = item.completed && completedItemContainer != null ? completedItemContainer : itemContainer;
+                GameObject go = Instantiate(itemPrefab, parent);
                 go.transform.SetSiblingIndex(item.position);
                 var ui = go.GetComponentInChildren<ShoppingListItemUI>();
                 if (ui != null)
