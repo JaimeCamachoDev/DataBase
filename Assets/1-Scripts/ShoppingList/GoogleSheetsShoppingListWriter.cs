@@ -16,6 +16,7 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
 
     void Start()
     {
+        Application.runInBackground = true;
         if (manager == null)
             manager = FindAnyObjectByType<ShoppingListManager>();
         if (manager != null)
@@ -30,6 +31,17 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
     {
         if (manager != null)
             manager.ListsChanged -= OnListsChanged;
+    }
+
+    void OnApplicationPause(bool pause)
+    {
+        if (pause)
+            QueueUpload();
+    }
+
+    void OnApplicationQuit()
+    {
+        QueueUpload();
     }
 
     void OnListsChanged() => QueueUpload();
@@ -64,6 +76,7 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
             {
                 sList.items.Add(new SerializableItem
                 {
+                    id = item.id,
                     name = item.name,
                     quantity = item.quantity,
                     position = item.position,
@@ -103,6 +116,7 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
     [System.Serializable]
     class SerializableItem
     {
+        public string id;
         public string name;
         public int quantity;
         public int position;

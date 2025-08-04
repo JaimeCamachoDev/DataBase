@@ -68,7 +68,7 @@ public class ShoppingListItemUI : MonoBehaviour
     {
         if (manager != null)
         {
-            manager.RemoveItem(listName, item.name);
+            manager.RemoveItem(listName, item.id);
         }
     }
 
@@ -77,7 +77,7 @@ public class ShoppingListItemUI : MonoBehaviour
         if (manager != null)
         {
             // Toggle the completed state so repeated swipes can undo
-            manager.SetItemCompleted(listName, item.name, !item.completed);
+            manager.SetItemCompleted(listName, item.id, !item.completed);
             Refresh();
         }
     }

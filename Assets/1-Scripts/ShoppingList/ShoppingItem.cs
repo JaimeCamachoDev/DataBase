@@ -3,6 +3,7 @@ using System;
 [Serializable]
 public class ShoppingItem
 {
+    public string id;
     public string name;
     public int quantity;
     public bool completed;

@@ -22,6 +22,8 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     public string positionHeader = "Position";
     [Tooltip("Column used for the item completion state (optional)")]
     public string completedHeader = "Completed";
+    [Tooltip("Column used for the item id (optional)")]
+    public string idHeader = "Id";
     [Tooltip("Name used when no list column is present")]
     public string defaultListName = "List";
 
@@ -82,6 +84,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         int qtyCol = System.Array.IndexOf(headers, quantityHeader);
         int posCol = System.Array.IndexOf(headers, positionHeader);
         int completedCol = System.Array.IndexOf(headers, completedHeader);
+        int idCol = System.Array.IndexOf(headers, idHeader);
         manager.BeginUpdate();
         manager.Clear();
 
@@ -110,7 +113,8 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
 
             int row = i + 1; // 1-based row index including header
             int column = itemCol >= 0 ? itemCol + 1 : -1;
-            manager.AddItem(listName, itemName, qty, pos, row, column, completed);
+            string id = idCol >= 0 && idCol < values.Length ? StripQuotes(values[idCol]) : null;
+            manager.AddItem(listName, itemName, qty, pos, row, column, completed, id);
         }
 
         manager.EndUpdate();
