@@ -31,14 +31,18 @@ public class ShoppingListUI : MonoBehaviour
     {
         if (manager == null) return;
         string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
-        string itemName = itemInput.text;
-        if (string.IsNullOrEmpty(itemName)) return;
+        string itemName = string.IsNullOrEmpty(itemInput.text) ? "Item" : itemInput.text;
         int qty = 0;
-        int.TryParse(quantityInput.text, out qty);
+        if (!int.TryParse(quantityInput.text, out qty))
+            qty = 0;
         int pos = -1;
-        if (positionInput != null)
-            int.TryParse(positionInput.text, out pos);
+        if (positionInput != null && !int.TryParse(positionInput.text, out pos))
+            pos = -1;
         manager.AddItem(listName, itemName, qty, pos);
+        itemInput.text = string.Empty;
+        quantityInput.text = string.Empty;
+        if (positionInput != null)
+            positionInput.text = string.Empty;
     }
 
     public void RemoveItem()
