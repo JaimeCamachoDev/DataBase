@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class ShoppingListManager : MonoBehaviour
@@ -9,11 +10,18 @@ public class ShoppingListManager : MonoBehaviour
     public event Action ListsChanged;
 
     bool suppressEvents = false;
+    string SavePath => Path.Combine(Application.persistentDataPath, "shoppingLists.json");
+
+    void Awake()
+    {
+        LoadFromDisk();
+    }
 
     void NotifyChanged()
     {
         if (!suppressEvents)
             ListsChanged?.Invoke();
+        SaveToDisk();
     }
 
     public void BeginUpdate() => suppressEvents = true;
@@ -36,7 +44,7 @@ public class ShoppingListManager : MonoBehaviour
         NotifyChanged();
     }
 
-    public void AddItem(string listName, string itemName, int quantity, int position = -1, int row = -1, int column = -1, bool completed = false)
+    public void AddItem(string listName, string itemName, int quantity, int position = -1, int row = -1, int column = -1, bool completed = false, string id = null)
     {
         var list = lists.Find(l => l.name == listName);
         if (list == null)
@@ -47,6 +55,7 @@ public class ShoppingListManager : MonoBehaviour
 
         var item = new ShoppingItem
         {
+            id = string.IsNullOrEmpty(id) ? Guid.NewGuid().ToString() : id,
             name = itemName,
             quantity = quantity,
             completed = completed,
@@ -66,12 +75,12 @@ public class ShoppingListManager : MonoBehaviour
         NotifyChanged();
     }
 
-    public void SetItemCompleted(string listName, string itemName, bool completed)
+    public void SetItemCompleted(string listName, string itemId, bool completed)
     {
         var list = lists.Find(l => l.name == listName);
         if (list == null) return;
 
-        var item = list.items.Find(i => i.name == itemName);
+        var item = list.items.Find(i => i.id == itemId);
         if (item == null) return;
 
         item.completed = completed;
@@ -92,12 +101,12 @@ public class ShoppingListManager : MonoBehaviour
         NotifyChanged();
     }
 
-    public void RemoveItem(string listName, string itemName)
+    public void RemoveItem(string listName, string itemId)
     {
         var list = lists.Find(l => l.name == listName);
         if (list == null) return;
 
-        var item = list.items.Find(i => i.name == itemName);
+        var item = list.items.Find(i => i.id == itemId);
         if (item == null) return;
 
         list.items.Remove(item);
@@ -106,5 +115,46 @@ public class ShoppingListManager : MonoBehaviour
             list.items[i].position = i;
 
         NotifyChanged();
+    }
+
+    void SaveToDisk()
+    {
+        try
+        {
+            var wrapper = new ListWrapper { lists = this.lists };
+            var json = JsonUtility.ToJson(wrapper);
+            File.WriteAllText(SavePath, json);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error saving lists: {e.Message}");
+        }
+    }
+
+    void LoadFromDisk()
+    {
+        if (!File.Exists(SavePath))
+            return;
+        try
+        {
+            string json = File.ReadAllText(SavePath);
+            var wrapper = JsonUtility.FromJson<ListWrapper>(json);
+            if (wrapper != null && wrapper.lists != null)
+            {
+                BeginUpdate();
+                lists = wrapper.lists;
+                EndUpdate();
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error loading lists: {e.Message}");
+        }
+    }
+
+    [Serializable]
+    class ListWrapper
+    {
+        public List<ShoppingList> lists;
     }
 }

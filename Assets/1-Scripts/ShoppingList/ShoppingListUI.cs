@@ -49,7 +49,10 @@ public class ShoppingListUI : MonoBehaviour
     {
         if (manager == null) return;
         string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
-        manager.RemoveItem(listName, itemInput.text);
+        var list = manager.lists.Find(l => l.name == listName);
+        var item = list != null ? list.items.Find(i => i.name == itemInput.text) : null;
+        if (item != null)
+            manager.RemoveItem(listName, item.id);
     }
 
     public void RebuildItems()
