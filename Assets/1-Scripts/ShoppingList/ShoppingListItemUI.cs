@@ -31,7 +31,7 @@ public class ShoppingListItemUI : MonoBehaviour
         if (manager == null)
             manager = FindAnyObjectByType<ShoppingListManager>();
         if (editor == null)
-            editor = FindAnyObjectByType<ShoppingListItemEditorUI>();
+            editor = FindObjectOfType<ShoppingListItemEditorUI>(true); // include inactive objects
         Refresh();
     }
 
