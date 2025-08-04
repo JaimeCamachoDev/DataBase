@@ -10,6 +10,7 @@ public class ShoppingListItemUI : MonoBehaviour
 
     // Expose the data this prefab represents
     public ShoppingListManager manager;
+    public ShoppingListItemEditorUI editor;
     public string listName;
     public ShoppingItem item;
 
@@ -21,6 +22,7 @@ public class ShoppingListItemUI : MonoBehaviour
         {
             swipe.onDelete.AddListener(OnDelete);
             swipe.onComplete.AddListener(OnComplete);
+            swipe.onClick.AddListener(OnEdit);
         }
     }
 
@@ -28,6 +30,8 @@ public class ShoppingListItemUI : MonoBehaviour
     {
         if (manager == null)
             manager = FindAnyObjectByType<ShoppingListManager>();
+        if (editor == null)
+            editor = FindAnyObjectByType<ShoppingListItemEditorUI>();
         Refresh();
     }
 
@@ -78,12 +82,19 @@ public class ShoppingListItemUI : MonoBehaviour
         }
     }
 
+    void OnEdit()
+    {
+        if (editor != null)
+            editor.EditItem(this);
+    }
+
     void OnDestroy()
     {
         if (swipe != null)
         {
             swipe.onDelete.RemoveListener(OnDelete);
             swipe.onComplete.RemoveListener(OnComplete);
+            swipe.onClick.RemoveListener(OnEdit);
         }
     }
 }
