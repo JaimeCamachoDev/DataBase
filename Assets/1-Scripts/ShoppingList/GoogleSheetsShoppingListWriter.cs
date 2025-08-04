@@ -11,6 +11,9 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
     [Tooltip("Manager whose data will be uploaded")]
     public ShoppingListManager manager;
 
+    bool uploadInProgress;
+    bool pendingUpload;
+
     void Start()
     {
         if (manager == null)
@@ -19,7 +22,7 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
         {
             manager.ListsChanged += OnListsChanged;
             // Push current data so new columns like Position/Completed exist
-            UploadList(manager);
+            QueueUpload();
         }
     }
 
@@ -29,15 +32,26 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
             manager.ListsChanged -= OnListsChanged;
     }
 
-    void OnListsChanged()
+    void OnListsChanged() => QueueUpload();
+
+    void QueueUpload()
     {
-        UploadList(manager);
+        if (manager == null || string.IsNullOrEmpty(scriptUrl)) return;
+        pendingUpload = true;
+        if (!uploadInProgress)
+            StartCoroutine(UploadSequential());
     }
 
-    public void UploadList(ShoppingListManager manager)
+    IEnumerator UploadSequential()
     {
-        if (manager != null && !string.IsNullOrEmpty(scriptUrl))
-            StartCoroutine(UploadCoroutine(manager.lists));
+        while (pendingUpload)
+        {
+            pendingUpload = false;
+            uploadInProgress = true;
+            yield return UploadCoroutine(manager.lists);
+            uploadInProgress = false;
+            yield return new WaitForSeconds(1f);
+        }
     }
 
     IEnumerator UploadCoroutine(List<ShoppingList> lists)
