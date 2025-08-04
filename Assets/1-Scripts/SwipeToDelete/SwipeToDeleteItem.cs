@@ -10,6 +10,7 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
     private Vector2 startDragPos;
     private Vector2 originalPos;
     private bool dragging = false;
+    private bool swipePerformed = false;
 
     [Header("Swipe Settings")]
     [SerializeField] private float deleteThreshold = 100f; // px para borrar
@@ -34,6 +35,7 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
         startDragPos = eventData.position;
         layoutElement.ignoreLayout = true;
         dragging = true;
+        swipePerformed = false;
         Debug.Log("🟢 PointerDown - Empezar swipe");
     }
 
@@ -43,6 +45,10 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
 
         float deltaX = eventData.position.x - startDragPos.x;
         rectTransform.anchoredPosition = new Vector2(originalPos.x + deltaX, originalPos.y);
+        if (Mathf.Abs(deltaX) > EventSystem.current.pixelDragThreshold)
+        {
+            swipePerformed = true;
+        }
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -53,12 +59,14 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
         if (finalDelta <= -deleteThreshold)
         {
             Debug.Log("💥 Item eliminado por swipe");
+            swipePerformed = true;
             onDelete.Invoke();
             Destroy(gameObject.transform.parent.gameObject);
         }
         else if (finalDelta >= deleteThreshold)
         {
             Debug.Log("✅ Item completado por swipe");
+            swipePerformed = true;
             layoutElement.ignoreLayout = false;
             onComplete.Invoke();
         }
@@ -68,6 +76,8 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
             layoutElement.ignoreLayout = false;
             StartCoroutine(AnimateReturn());
         }
+
+        swipePerformed = false;
     }
 
     private System.Collections.IEnumerator AnimateReturn()
@@ -85,6 +95,10 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        onClick.Invoke();
+        if (!swipePerformed)
+        {
+            onClick.Invoke();
+        }
+        swipePerformed = false;
     }
 }
