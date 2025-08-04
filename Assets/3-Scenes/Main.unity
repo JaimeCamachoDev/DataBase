@@ -2399,6 +2399,7 @@ MonoBehaviour:
   quantityHeader: Units
   positionHeader: Position
   completedHeader: Completed
+  idHeader: Id
   defaultListName: List
   refreshInterval: 0
 --- !u!114 &281186837
@@ -2798,7 +2799,7 @@ GameObject:
   - component: {fileID: 348766730}
   - component: {fileID: 348766729}
   m_Layer: 5
-  m_Name: Int Panel
+  m_Name: Init Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10733,7 +10734,7 @@ GameObject:
   - component: {fileID: 1420465270}
   - component: {fileID: 1420465269}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Logo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10753,10 +10754,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 348766728}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 375}
-  m_SizeDelta: {x: -300, y: -1450}
+  m_SizeDelta: {x: 600, y: 350}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1420465269
 MonoBehaviour:
