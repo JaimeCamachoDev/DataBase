@@ -78,6 +78,20 @@ public class ShoppingListManager : MonoBehaviour
         NotifyChanged();
     }
 
+    public void UpdateItem(string listName, ShoppingItem item, string newName, int quantity, bool completed)
+    {
+        var list = lists.Find(l => l.name == listName);
+        if (list == null) return;
+
+        var target = list.items.Find(i => i == item);
+        if (target == null) return;
+
+        target.name = newName;
+        target.quantity = quantity;
+        target.completed = completed;
+        NotifyChanged();
+    }
+
     public void RemoveItem(string listName, string itemName)
     {
         var list = lists.Find(l => l.name == listName);

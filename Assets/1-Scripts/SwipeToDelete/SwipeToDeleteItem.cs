@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.Events;
 
-public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler
+public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
 {
     private RectTransform rectTransform;
     private LayoutElement layoutElement;
@@ -17,6 +17,7 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
 
     public UnityEvent onDelete = new UnityEvent();
     public UnityEvent onComplete = new UnityEvent();
+    public UnityEvent onClick = new UnityEvent();
 
     private void Awake()
     {
@@ -80,5 +81,10 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
             yield return null;
         }
         rectTransform.anchoredPosition = originalPos;
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        onClick.Invoke();
     }
 }
