@@ -1,17 +1,24 @@
 using System.Collections;
+using System.Globalization;
+using System.IO;
 using UnityEngine;
-using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
+using UnityEngine.Networking; // requires the built‑in "Unity Web Request" package
 
+/// <summary>
+/// Downloads a public Google Sheet in CSV format and fills a
+/// <see cref="ShoppingListManager"/> with the parsed items.
+/// </summary>
 public class GoogleSheetsShoppingListLoader : MonoBehaviour
 {
+    /// <summary>Manager that will receive the loaded data.</summary>
     [Tooltip("Manager to receive loaded lists")]
     public ShoppingListManager manager;
 
+    /// <summary>Public CSV export link of the Google Sheet.</summary>
     [Tooltip("Public Google Sheets export link")]
     public string sheetUrl;
 
-
-    [Header("Column titles")]                // allows using custom headers
+    [Header("Column titles")] // allows using custom headers
     [Tooltip("Column used for the list name (optional)")]
     public string listHeader = "List";
     [Tooltip("Column used for the item name")]
@@ -27,6 +34,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     [Tooltip("Name used when no list column is present")]
     public string defaultListName = "List";
 
+    /// <summary>Reload data every N seconds (0 disables auto refresh).</summary>
     [Tooltip("Reload data every N seconds (0 disables auto refresh)")]
     public float refreshInterval = 0f;
 
@@ -34,18 +42,25 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     {
         if (manager != null && !string.IsNullOrEmpty(sheetUrl))
         {
+            // Initial load of the sheet
             Refresh();
+
+            // Optionally reload periodically
+            
             if (refreshInterval > 0f)
                 StartCoroutine(RefreshPeriodically());
         }
         else
+        {
             Debug.LogWarning("Loader requires a manager and sheet URL");
+        }
     }
 
+    /// <summary>Manually trigger a refresh of the sheet.</summary>
     public void Refresh()
     {
-        if (manager == null) return;
-        StartCoroutine(Load());
+        if (manager != null)
+            StartCoroutine(Load());
     }
 
     IEnumerator RefreshPeriodically()
@@ -57,6 +72,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         }
     }
 
+    /// <summary>Downloads the CSV and fills the manager with the parsed rows.</summary>
     IEnumerator Load()
     {
         UnityWebRequest request = UnityWebRequest.Get(sheetUrl);
@@ -68,61 +84,69 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             yield break;
         }
 
-        string[] lines = request.downloadHandler.text.Split('\n');
-        if (lines.Length == 0)
-            yield break;
-
-        // Trim the header line and each column title to avoid issues with
-        // Windows line endings or extra whitespace that prevent column
-        // detection (e.g. "Units\r" not matching "Units").
-        string[] headers = lines[0].Trim().Split(',');
-        for (int i = 0; i < headers.Length; i++)
-            headers[i] = StripQuotes(headers[i]);
-
-        int listCol = System.Array.IndexOf(headers, listHeader);
-        int itemCol = System.Array.IndexOf(headers, itemHeader);
-        int qtyCol = System.Array.IndexOf(headers, quantityHeader);
-        int posCol = System.Array.IndexOf(headers, positionHeader);
-        int completedCol = System.Array.IndexOf(headers, completedHeader);
-        int idCol = System.Array.IndexOf(headers, idHeader);
-        manager.BeginUpdate();
-        manager.Clear();
-
-        for (int i = 1; i < lines.Length; i++)
+        using (var reader = new StringReader(request.downloadHandler.text))
+        using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            string line = lines[i].Trim();
-            if (string.IsNullOrEmpty(line))
-                continue;
+            BadDataFound = null,
+            TrimOptions = TrimOptions.Trim
+        }))
+        {
+            // Nothing to do if the sheet is empty
+            if (!csv.Read())
+                yield break;
 
-            string[] values = line.Split(',');
-            string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : defaultListName;
+            csv.ReadHeader();
+            var headers = csv.HeaderRecord;
+            for (int i = 0; i < headers.Length; i++)
+                headers[i] = StripQuotes(headers[i]);
 
-            string itemName = itemCol >= 0 && itemCol < values.Length ? StripQuotes(values[itemCol]) : string.Empty;
-            string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? StripQuotes(values[qtyCol]) : "0";
-            string posStr = posCol >= 0 && posCol < values.Length ? StripQuotes(values[posCol]) : "-1";
-            string completedStr = completedCol >= 0 && completedCol < values.Length ? StripQuotes(values[completedCol]) : "false";
-            int qty = 0;
-            int.TryParse(qtyStr, out qty);
-            int pos = -1;
-            int.TryParse(posStr, out pos);
-            bool completed = false;
-            bool.TryParse(completedStr, out completed);
+            int listCol = System.Array.IndexOf(headers, listHeader);
+            int itemCol = System.Array.IndexOf(headers, itemHeader);
+            int qtyCol = System.Array.IndexOf(headers, quantityHeader);
+            int posCol = System.Array.IndexOf(headers, positionHeader);
+            int completedCol = System.Array.IndexOf(headers, completedHeader);
+            int idCol = System.Array.IndexOf(headers, idHeader);
 
-            if (string.IsNullOrEmpty(itemName))
-                continue;
+            // Avoid spamming change events while rebuilding the list
+            manager.BeginUpdate();
+            manager.Clear();
 
-            int row = i + 1; // 1-based row index including header
-            int column = itemCol >= 0 ? itemCol + 1 : -1;
-            string id = idCol >= 0 && idCol < values.Length ? StripQuotes(values[idCol]) : null;
-            manager.AddItem(listName, itemName, qty, pos, row, column, completed, id);
+            int row = 1; // header row already read
+            while (csv.Read())
+            {
+                var values = csv.Context.Record;
+                if (values == null || values.Length == 0)
+                    continue;
+
+                row++;
+
+                string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : defaultListName;
+                string itemName = itemCol >= 0 && itemCol < values.Length ? StripQuotes(values[itemCol]) : string.Empty;
+                string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? StripQuotes(values[qtyCol]) : "0";
+                string posStr = posCol >= 0 && posCol < values.Length ? StripQuotes(values[posCol]) : "-1";
+                string completedStr = completedCol >= 0 && completedCol < values.Length ? StripQuotes(values[completedCol]) : "false";
+                string id = idCol >= 0 && idCol < values.Length ? StripQuotes(values[idCol]) : null;
+
+                int qty = 0;
+                int.TryParse(qtyStr, out qty);
+                int pos = -1;
+                int.TryParse(posStr, out pos);
+                bool completed = false;
+                bool.TryParse(completedStr, out completed);
+
+                if (string.IsNullOrEmpty(itemName))
+                    continue;
+
+                int column = itemCol >= 0 ? itemCol + 1 : -1;
+                manager.AddItem(listName, itemName, qty, pos, row, column, completed, id);
+            }
+
+            manager.EndUpdate();
 
         }
 
         Debug.Log("Loaded shopping lists from sheet");
     }
-
-    private static string StripQuotes(string value)
-    {
-        return value.Trim().Trim('"');
-    }
+    static string StripQuotes(string value) => value == null ? null : value.Trim().Trim('"');
 }
+
