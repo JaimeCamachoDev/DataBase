@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking; // requires the built‑in "Unity Web Request" package
 using System.IO;
-using CsvHelper;
-using CsvHelper.Configuration;
 using System.Globalization;
 
 
@@ -85,7 +83,7 @@ public class GoogleSheetsReader : MonoBehaviour
             }
             else if (c == ',' && !inQuotes)
             {
-                fields.Add(field.ToString());
+                 fields.Add(field.ToString());
                 field.Length = 0;
             }
             else if (c != '\r')
