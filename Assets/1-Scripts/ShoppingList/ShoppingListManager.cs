@@ -27,16 +27,18 @@ public class ShoppingListManager : MonoBehaviour
 
     void Awake() => LoadFromDisk();
 
-    /// <summary>Helper that notifies listeners and persists data to disk.</summary>
+    /// <summary>Helper that persists and notifies only when eventos are allowed.</summary>
     void NotifyChanged()
     {
         if (!suppressEvents)
+        {
+            SaveToDisk();
             ListsChanged?.Invoke();
+        }
         else
+        {
             needsSave = true;
-            
-        SaveToDisk();
-        ListsChanged?.Invoke();
+        }
     }
 
     /// <summary>Call before performing many changes to silence events temporarily.</summary>
@@ -54,9 +56,8 @@ public class ShoppingListManager : MonoBehaviour
         {
             needsSave = false;
             SaveToDisk();
+            ListsChanged?.Invoke();
         }
-
-        ListsChanged?.Invoke();
     }
 
     /// <summary>Remove all lists and notify listeners.</summary>

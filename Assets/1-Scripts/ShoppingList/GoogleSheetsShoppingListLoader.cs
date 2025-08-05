@@ -1,62 +1,87 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Networking; // requires the built‑in "Unity Web Request" package
+using UnityEngine.Networking;
+using CsvHelper;
+using CsvHelper.Configuration;
 
 /// <summary>
-/// Downloads a public Google Sheet in CSV format and fills a
-/// <see cref="ShoppingListManager"/> with the parsed items.
+/// Sincroniza la lista de la compra con una hoja de cálculo de Google.
+/// 1. Descarga la hoja en formato CSV y rellena <see cref="ShoppingListManager"/>.
+/// 2. Escucha cambios y los envía al Apps Script para mantener la hoja actualizada.
 /// </summary>
 public class GoogleSheetsShoppingListLoader : MonoBehaviour
 {
-    /// <summary>Manager that will receive the loaded data.</summary>
-    [Tooltip("Manager to receive loaded lists")]
+    [Tooltip("Gestor que almacena la lista de la compra")]
     public ShoppingListManager manager;
 
-    /// <summary>Public CSV export link of the Google Sheet.</summary>
-    [Tooltip("Public Google Sheets export link")]
+    [Tooltip("Enlace público de exportación CSV de la hoja")]
     public string sheetUrl;
 
-    [Header("Column titles")] // allows using custom headers
-    [Tooltip("Column used for the list name (optional)")]
-    public string listHeader = "List";
-    [Tooltip("Column used for the item name")]
-    public string itemHeader = "Item";
-    [Tooltip("Column used for the item quantity")]
-    public string quantityHeader = "Units";
-    [Tooltip("Column used for the item position (optional)")]
-    public string positionHeader = "Position";
-    [Tooltip("Column used for the item completion state (optional)")]
-    public string completedHeader = "Completed";
-    [Tooltip("Column used for the item id (optional)")]
-    public string idHeader = "Id";
-    [Tooltip("Name used when no list column is present")]
-    public string defaultListName = "List";
+    [Tooltip("URL del Apps Script que actualiza la hoja")]
+    public string scriptUrl;
 
-    /// <summary>Reload data every N seconds (0 disables auto refresh).</summary>
-    [Tooltip("Reload data every N seconds (0 disables auto refresh)")]
+    [Tooltip("Recargar datos cada N segundos (0 desactiva)")]
     public float refreshInterval = 0f;
+
+    // Nombres fijos de las columnas de la hoja
+    const string LIST = "List";
+    const string ITEM = "Item";
+    const string QTY = "Units";
+    const string POS = "Position";
+    const string DONE = "Completed";
+    const string ID = "Id";
+    const string DEFAULT_LIST = "List";
+
+    // Flags para gestionar las subidas
+    bool uploadInProgress;
+    bool pendingUpload;
 
     void Start()
     {
+        Application.runInBackground = true;
+
+        if (manager == null)
+            manager = FindAnyObjectByType<ShoppingListManager>();
+
+        if (manager != null)
+            manager.ListsChanged += OnListsChanged;
+
         if (manager != null && !string.IsNullOrEmpty(sheetUrl))
         {
-            // Initial load of the sheet
+            // Paso 1: descargar la hoja inicial
             Refresh();
 
-            // Optionally reload periodically
-            
+            // Paso 2: recarga periódica opcional
             if (refreshInterval > 0f)
                 StartCoroutine(RefreshPeriodically());
         }
         else
         {
-            Debug.LogWarning("Loader requires a manager and sheet URL");
+            Debug.LogWarning("El cargador necesita un gestor y una URL de hoja");
         }
     }
 
-    /// <summary>Manually trigger a refresh of the sheet.</summary>
+    void OnDestroy()
+    {
+        if (manager != null)
+            manager.ListsChanged -= OnListsChanged;
+    }
+
+    void OnApplicationPause(bool pause)
+    {
+        if (pause)
+            QueueUpload();
+    }
+
+    void OnApplicationQuit() => QueueUpload();
+
+    // Se invoca cada vez que cambia la lista en memoria
+    void OnListsChanged() => QueueUpload();
+
+    /// <summary>Descarga manualmente la hoja.</summary>
     public void Refresh()
     {
         if (manager != null)
@@ -72,7 +97,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         }
     }
 
-    /// <summary>Downloads the CSV and fills the manager with the parsed rows.</summary>
+    /// <summary>Descarga la hoja CSV y reconstruye las listas.</summary>
     IEnumerator Load()
     {
         UnityWebRequest request = UnityWebRequest.Get(sheetUrl);
@@ -80,7 +105,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
 
         if (request.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogError($"Error reading sheet: {request.error}");
+            Debug.LogError($"Error leyendo hoja: {request.error}");
             yield break;
         }
 
@@ -91,7 +116,6 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             TrimOptions = TrimOptions.Trim
         }))
         {
-            // Nothing to do if the sheet is empty
             if (!csv.Read())
                 yield break;
 
@@ -100,18 +124,18 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             for (int i = 0; i < headers.Length; i++)
                 headers[i] = StripQuotes(headers[i]);
 
-            int listCol = System.Array.IndexOf(headers, listHeader);
-            int itemCol = System.Array.IndexOf(headers, itemHeader);
-            int qtyCol = System.Array.IndexOf(headers, quantityHeader);
-            int posCol = System.Array.IndexOf(headers, positionHeader);
-            int completedCol = System.Array.IndexOf(headers, completedHeader);
-            int idCol = System.Array.IndexOf(headers, idHeader);
+            int listCol = System.Array.IndexOf(headers, LIST);
+            int itemCol = System.Array.IndexOf(headers, ITEM);
+            int qtyCol = System.Array.IndexOf(headers, QTY);
+            int posCol = System.Array.IndexOf(headers, POS);
+            int completedCol = System.Array.IndexOf(headers, DONE);
+            int idCol = System.Array.IndexOf(headers, ID);
 
-            // Avoid spamming change events while rebuilding the list
+            // Paso 3: evitar eventos mientras se reconstruyen las listas
             manager.BeginUpdate();
             manager.Clear();
 
-            int row = 1; // header row already read
+            int row = 1; // la fila de cabecera ya se leyó
             while (csv.Read())
             {
                 var values = csv.Context.Record;
@@ -120,7 +144,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
 
                 row++;
 
-                string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : defaultListName;
+                string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : DEFAULT_LIST;
                 string itemName = itemCol >= 0 && itemCol < values.Length ? StripQuotes(values[itemCol]) : string.Empty;
                 string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? StripQuotes(values[qtyCol]) : "0";
                 string posStr = posCol >= 0 && posCol < values.Length ? StripQuotes(values[posCol]) : "-1";
@@ -142,11 +166,101 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             }
 
             manager.EndUpdate();
-
         }
 
-        Debug.Log("Loaded shopping lists from sheet");
+        Debug.Log("Listas cargadas desde Google Sheets");
     }
+
+    // ---- Código de subida ----
+
+    void QueueUpload()
+    {
+        if (manager == null || string.IsNullOrEmpty(scriptUrl))
+            return;
+
+        pendingUpload = true;
+        if (!uploadInProgress)
+            StartCoroutine(UploadSequential());
+    }
+
+    IEnumerator UploadSequential()
+    {
+        while (pendingUpload)
+        {
+            pendingUpload = false;
+            uploadInProgress = true;
+            yield return UploadCoroutine(manager.lists);
+            uploadInProgress = false;
+
+            // Pequeña pausa para evitar saturar el servidor
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
+    IEnumerator UploadCoroutine(List<ShoppingList> lists)
+    {
+        var serializableLists = new List<SerializableList>();
+        foreach (var list in lists)
+        {
+            var sList = new SerializableList
+            {
+                name = list.name,
+                items = new List<SerializableItem>()
+            };
+
+            foreach (var item in list.items)
+            {
+                sList.items.Add(new SerializableItem
+                {
+                    id = item.id,
+                    name = item.name,
+                    quantity = item.quantity,
+                    position = item.position,
+                    completed = item.completed
+                });
+            }
+
+            serializableLists.Add(sList);
+        }
+
+        var wrapper = new Wrapper { lists = serializableLists };
+        string json = JsonUtility.ToJson(wrapper);
+        byte[] data = System.Text.Encoding.UTF8.GetBytes(json);
+
+        UnityWebRequest request = new UnityWebRequest(scriptUrl, "POST");
+        request.uploadHandler = new UploadHandlerRaw(data);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+            Debug.LogError($"Error subiendo lista: {request.error}");
+        else
+            Debug.Log("Hoja actualizada");
+    }
+
+    [System.Serializable]
+    class Wrapper
+    {
+        public List<SerializableList> lists;
+    }
+
+    [System.Serializable]
+    class SerializableList
+    {
+        public string name;
+        public List<SerializableItem> items;
+    }
+
+    [System.Serializable]
+    class SerializableItem
+    {
+        public string id;
+        public string name;
+        public int quantity;
+        public int position;
+        public bool completed;
+    }
+
     static string StripQuotes(string value) => value == null ? null : value.Trim().Trim('"');
 }
-
