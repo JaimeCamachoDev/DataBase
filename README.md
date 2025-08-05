@@ -27,10 +27,9 @@ Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que pro
 - **ShoppingItem**: almacena el nombre del artículo, la cantidad, la lista a la que pertenece, la posición dentro de la lista y su ubicación (fila y columna) en la hoja de cálculo.
 - **ShoppingList**: agrupa varios `ShoppingItem` bajo un nombre de lista.
 - **ShoppingListManager**: permite crear listas y añadir elementos desde código.
-- **GoogleSheetsShoppingListLoader**: lee una hoja de cálculo publicada en formato CSV e incorpora los datos al `ShoppingListManager`, con soporte opcional de recarga periódica.
+- **GoogleSheetsShoppingListLoader**: lee una hoja de cálculo publicada en formato CSV e incorpora los datos al `ShoppingListManager`, además de enviar los cambios a un script de Apps Script para mantener la hoja sincronizada.
 
 
-El componente permite indicar en el inspector los encabezados de columna que corresponden al nombre de la lista, el artículo y la cantidad. De este modo puedes usar títulos personalizados en la primera fila de tu hoja de cálculo. Si no incluyes la columna de lista, todos los elementos se añadirán a la lista indicada en `defaultListName`.
 Estos componentes sirven como base para desarrollar la funcionalidad de la aplicación sin necesidad de recompilar cada vez que cambien los datos.
 
 ### Gestión de la lista desde la interfaz
@@ -38,9 +37,8 @@ Estos componentes sirven como base para desarrollar la funcionalidad de la aplic
 Se han añadido scripts para manipular y visualizar las listas en tiempo de ejecución:
 
 - **ShoppingListUI**: instancia un prefab por cada artículo del `ShoppingListManager` dentro de un contenedor y permite añadir o eliminar elementos mediante campos de entrada y botones.
-- **ShoppingListItemUI**: usa TextMeshPro para mostrar los datos del item y, gracias al evento `onDelete` de `SwipeToDeleteItem`, al eliminarse también actualiza el gestor y la hoja de cálculo. Los elementos completados se muestran tachados y en gris para dar feedback visual. Si no se le asignan referencias al gestor o al escritor, las buscará en la escena al iniciarse.
+- **ShoppingListItemUI**: usa TextMeshPro para mostrar los datos del item y, gracias al evento `onDelete` de `SwipeToDeleteItem`, al eliminarse también actualiza el gestor y la hoja de cálculo. Los elementos completados se muestran tachados y en gris para dar feedback visual. Si no se le asignan referencias al gestor, las buscará en la escena al iniciarse.
 - **Rebuild automático**: `ShoppingListUI` ahora detecta el componente `ShoppingListItemUI` aunque se encuentre en un objeto hijo del prefab instanciado.
-- **GoogleSheetsShoppingListWriter**: envía los cambios a un script web para actualizar la hoja de cálculo mediante una petición `POST` en formato JSON.
 
 > **⚠️ IMPORTANTE:** cada vez que edites el script de Google Apps debes crear un **nuevo deployment** y **actualizar la URL** en Unity para que los cambios surtan efecto. Si olvidas este paso, la aplicación seguirá usando la versión anterior del script.
 

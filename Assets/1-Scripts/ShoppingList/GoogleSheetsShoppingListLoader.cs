@@ -1,55 +1,95 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
 
 public class GoogleSheetsShoppingListLoader : MonoBehaviour
 {
-    [Tooltip("Manager to receive loaded lists")]
+    [Tooltip("Gestor que almacena las listas cargadas")]
     public ShoppingListManager manager;
 
-    [Tooltip("Public Google Sheets export link")]
+    [Tooltip("Enlace público de exportación de Google Sheets")]
     public string sheetUrl;
 
+    [Tooltip("URL del script de Apps Script para subir los cambios")]
+    public string scriptUrl;
 
-    [Header("Column titles")]                // allows using custom headers
-    [Tooltip("Column used for the list name (optional)")]
-    public string listHeader = "List";
-    [Tooltip("Column used for the item name")]
-    public string itemHeader = "Item";
-    [Tooltip("Column used for the item quantity")]
-    public string quantityHeader = "Units";
-    [Tooltip("Column used for the item position (optional)")]
-    public string positionHeader = "Position";
-    [Tooltip("Column used for the item completion state (optional)")]
-    public string completedHeader = "Completed";
-    [Tooltip("Column used for the item id (optional)")]
-    public string idHeader = "Id";
-    [Tooltip("Name used when no list column is present")]
-    public string defaultListName = "List";
-
-    [Tooltip("Reload data every N seconds (0 disables auto refresh)")]
+    [Tooltip("Recargar datos cada N segundos (0 desactiva la recarga automática)")]
     public float refreshInterval = 0f;
+
+    // Constantes con los nombres de las columnas esperadas en la hoja
+    const string LIST_HEADER = "List";
+    const string ITEM_HEADER = "Item";
+    const string QUANTITY_HEADER = "Units";
+    const string POSITION_HEADER = "Position";
+    const string COMPLETED_HEADER = "Completed";
+    const string ID_HEADER = "Id";
+    const string DEFAULT_LIST_NAME = "List";
+
+    // Variables de control para la subida de datos
+    bool uploadInProgress;
+    bool pendingUpload;
 
     void Start()
     {
-        if (manager != null && !string.IsNullOrEmpty(sheetUrl))
+        // Permite que la aplicación siga ejecutándose en segundo plano
+        Application.runInBackground = true;
+
+        // Si no se asigna un manager, intentamos localizar uno en la escena
+        if (manager == null)
+            manager = FindAnyObjectByType<ShoppingListManager>();
+
+        if (manager != null)
         {
-            Refresh();
-            if (refreshInterval > 0f)
-                StartCoroutine(RefreshPeriodically());
+            // Cuando cambien las listas, programamos una subida
+            manager.ListsChanged += OnListsChanged;
+
+            // Si hay una URL válida, cargamos los datos iniciales
+            if (!string.IsNullOrEmpty(sheetUrl))
+            {
+                Refresh();
+                if (refreshInterval > 0f)
+                    StartCoroutine(RefreshPeriodically());
+            }
         }
         else
-            Debug.LogWarning("Loader requires a manager and sheet URL");
+        {
+            Debug.LogWarning("El cargador necesita un ShoppingListManager y una URL de hoja");
+        }
     }
+
+    void OnDestroy()
+    {
+        // Dejamos de escuchar el evento al destruirse
+        if (manager != null)
+            manager.ListsChanged -= OnListsChanged;
+    }
+
+    void OnApplicationPause(bool pause)
+    {
+        // Al pausar la aplicación se intenta subir la información pendiente
+        if (pause)
+            QueueUpload();
+    }
+
+    void OnApplicationQuit()
+    {
+        // Antes de salir también intentamos subir la información
+        QueueUpload();
+    }
+
+    void OnListsChanged() => QueueUpload();
 
     public void Refresh()
     {
-        if (manager == null) return;
+        // Inicia la descarga de la hoja de cálculo
+        if (manager == null || string.IsNullOrEmpty(sheetUrl)) return;
         StartCoroutine(Load());
     }
 
     IEnumerator RefreshPeriodically()
     {
+        // Recarga la hoja cada cierto tiempo
         while (true)
         {
             yield return new WaitForSeconds(refreshInterval);
@@ -59,12 +99,13 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
 
     IEnumerator Load()
     {
+        // Realiza la petición HTTP para obtener el CSV
         UnityWebRequest request = UnityWebRequest.Get(sheetUrl);
         yield return request.SendWebRequest();
 
         if (request.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogError($"Error reading sheet: {request.error}");
+            Debug.LogError($"Error al leer la hoja: {request.error}");
             yield break;
         }
 
@@ -72,19 +113,18 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         if (lines.Length == 0)
             yield break;
 
-        // Trim the header line and each column title to avoid issues with
-        // Windows line endings or extra whitespace that prevent column
-        // detection (e.g. "Units\r" not matching "Units").
+        // Procesa las cabeceras para localizar las columnas
         string[] headers = lines[0].Trim().Split(',');
         for (int i = 0; i < headers.Length; i++)
             headers[i] = StripQuotes(headers[i]);
 
-        int listCol = System.Array.IndexOf(headers, listHeader);
-        int itemCol = System.Array.IndexOf(headers, itemHeader);
-        int qtyCol = System.Array.IndexOf(headers, quantityHeader);
-        int posCol = System.Array.IndexOf(headers, positionHeader);
-        int completedCol = System.Array.IndexOf(headers, completedHeader);
-        int idCol = System.Array.IndexOf(headers, idHeader);
+        int listCol = System.Array.IndexOf(headers, LIST_HEADER);
+        int itemCol = System.Array.IndexOf(headers, ITEM_HEADER);
+        int qtyCol = System.Array.IndexOf(headers, QUANTITY_HEADER);
+        int posCol = System.Array.IndexOf(headers, POSITION_HEADER);
+        int completedCol = System.Array.IndexOf(headers, COMPLETED_HEADER);
+        int idCol = System.Array.IndexOf(headers, ID_HEADER);
+
         manager.BeginUpdate();
         manager.Clear();
 
@@ -95,7 +135,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
                 continue;
 
             string[] values = line.Split(',');
-            string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : defaultListName;
+            string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : DEFAULT_LIST_NAME;
 
             string itemName = itemCol >= 0 && itemCol < values.Length ? StripQuotes(values[itemCol]) : string.Empty;
             string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? StripQuotes(values[qtyCol]) : "0";
@@ -111,18 +151,89 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             if (string.IsNullOrEmpty(itemName))
                 continue;
 
-            int row = i + 1; // 1-based row index including header
+            int row = i + 1; // índice de fila empezando en 1 incluyendo la cabecera
             int column = itemCol >= 0 ? itemCol + 1 : -1;
             string id = idCol >= 0 && idCol < values.Length ? StripQuotes(values[idCol]) : null;
             manager.AddItem(listName, itemName, qty, pos, row, column, completed, id);
         }
 
         manager.EndUpdate();
-        Debug.Log("Loaded shopping lists from sheet");
+        Debug.Log("Listas de la compra cargadas desde la hoja");
+    }
+
+    void QueueUpload()
+    {
+        // Marca que hay cambios pendientes de subir
+        if (manager == null || string.IsNullOrEmpty(scriptUrl)) return;
+        pendingUpload = true;
+        if (!uploadInProgress)
+            StartCoroutine(UploadSequential());
+    }
+
+    IEnumerator UploadSequential()
+    {
+        // Subida secuencial de cambios acumulados
+        while (pendingUpload)
+        {
+            pendingUpload = false;
+            uploadInProgress = true;
+            yield return UploadCoroutine(manager.lists);
+            uploadInProgress = false;
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
+    IEnumerator UploadCoroutine(List<ShoppingList> lists)
+    {
+        // Prepara los datos en formato JSON
+        var serializableLists = new List<SerializableList>();
+        foreach (var list in lists)
+        {
+            var sList = new SerializableList { name = list.name, items = new List<SerializableItem>() };
+            foreach (var item in list.items)
+            {
+                sList.items.Add(new SerializableItem
+                {
+                    id = item.id,
+                    name = item.name,
+                    quantity = item.quantity,
+                    position = item.position,
+                    completed = item.completed
+                });
+            }
+            serializableLists.Add(sList);
+        }
+
+        var wrapper = new Wrapper { lists = serializableLists };
+        string json = JsonUtility.ToJson(wrapper);
+
+        // Enviamos la petición POST al Apps Script
+        byte[] data = System.Text.Encoding.UTF8.GetBytes(json);
+        UnityWebRequest request = new UnityWebRequest(scriptUrl, "POST");
+        request.uploadHandler = new UploadHandlerRaw(data);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+        yield return request.SendWebRequest();
+        if (request.result != UnityWebRequest.Result.Success)
+            Debug.LogError($"Error al subir la lista: {request.error}");
+        else
+            Debug.Log("Hoja actualizada correctamente");
     }
 
     private static string StripQuotes(string value)
     {
+        // Elimina espacios y comillas de un valor de texto
         return value.Trim().Trim('"');
     }
+
+    // Clases auxiliares para serializar la información
+    [System.Serializable]
+    class Wrapper { public List<SerializableList> lists; }
+
+    [System.Serializable]
+    class SerializableList { public string name; public List<SerializableItem> items; }
+
+    [System.Serializable]
+    class SerializableItem { public string id; public string name; public int quantity; public int position; public bool completed; }
 }
+
