@@ -24,12 +24,22 @@ public class ShoppingListManager : MonoBehaviour
         SaveToDisk();
     }
 
-    public void BeginUpdate() => suppressEvents = true;
+    public void BeginUpdate()
+    {
+        suppressEvents = true;
+        needsSave = false;
+    }
 
     public void EndUpdate()
     {
         suppressEvents = false;
-        NotifyChanged();
+        if (needsSave)
+        {
+            needsSave = false;
+            SaveToDisk();
+        }
+
+        ListsChanged?.Invoke();
     }
 
     public void Clear()

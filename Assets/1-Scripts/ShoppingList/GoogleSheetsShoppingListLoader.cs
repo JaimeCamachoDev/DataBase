@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
+using System.IO;
+using Microsoft.VisualBasic.FileIO;
 
 public class GoogleSheetsShoppingListLoader : MonoBehaviour
 {
@@ -115,9 +117,9 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             int column = itemCol >= 0 ? itemCol + 1 : -1;
             string id = idCol >= 0 && idCol < values.Length ? StripQuotes(values[idCol]) : null;
             manager.AddItem(listName, itemName, qty, pos, row, column, completed, id);
+
         }
 
-        manager.EndUpdate();
         Debug.Log("Loaded shopping lists from sheet");
     }
 
