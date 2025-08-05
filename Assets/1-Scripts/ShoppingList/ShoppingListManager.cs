@@ -22,6 +22,7 @@ public class ShoppingListManager : MonoBehaviour
     bool needsSave = false;
 
     // Location on disk where data is saved between sessions
+    
     string SavePath => Path.Combine(Application.persistentDataPath, "shoppingLists.json");
 
     void Awake() => LoadFromDisk();
@@ -33,8 +34,9 @@ public class ShoppingListManager : MonoBehaviour
             ListsChanged?.Invoke();
         else
             needsSave = true;
-
+            
         SaveToDisk();
+        ListsChanged?.Invoke();
     }
 
     /// <summary>Call before performing many changes to silence events temporarily.</summary>

@@ -1,5 +1,3 @@
-using CsvHelper;
-using CsvHelper.Configuration;
 using System.Collections;
 using System.Globalization;
 using System.IO;
@@ -48,6 +46,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             Refresh();
 
             // Optionally reload periodically
+            
             if (refreshInterval > 0f)
                 StartCoroutine(RefreshPeriodically());
         }
@@ -143,11 +142,11 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             }
 
             manager.EndUpdate();
+
         }
 
         Debug.Log("Loaded shopping lists from sheet");
     }
-
     static string StripQuotes(string value) => value == null ? null : value.Trim().Trim('"');
 }
 
