@@ -1,11 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
-using CsvHelper;
-using CsvHelper.Configuration;
+
 
 /// <summary>
 /// Sincroniza la lista de la compra con una hoja de cálculo de Google.
@@ -109,64 +106,56 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             yield break;
         }
 
-        using (var reader = new StringReader(request.downloadHandler.text))
-        using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+        // Paso 3: dividir el CSV en líneas
+        var lines = request.downloadHandler.text.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
+        if (lines.Length <= 1)
+            yield break;
+
+        // Paso 4: leer cabeceras para localizar columnas
+        var headers = lines[0].Split(',');
+        for (int i = 0; i < headers.Length; i++)
+            headers[i] = StripQuotes(headers[i]);
+
+        int listCol = System.Array.IndexOf(headers, LIST);
+        int itemCol = System.Array.IndexOf(headers, ITEM);
+        int qtyCol = System.Array.IndexOf(headers, QTY);
+        int posCol = System.Array.IndexOf(headers, POS);
+        int completedCol = System.Array.IndexOf(headers, DONE);
+        int idCol = System.Array.IndexOf(headers, ID);
+
+        // Paso 5: reconstruir listas sin disparar eventos
+        manager.BeginUpdate();
+        manager.Clear();
+
+        int sheetRow = 1; // fila de cabecera
+        for (int i = 1; i < lines.Length; i++)
         {
-            BadDataFound = null,
-            TrimOptions = TrimOptions.Trim
-        }))
-        {
-            if (!csv.Read())
-                yield break;
+            var line = lines[i].Trim();
+            if (string.IsNullOrEmpty(line))
+                continue;
 
-            csv.ReadHeader();
-            var headers = csv.HeaderRecord;
-            for (int i = 0; i < headers.Length; i++)
-                headers[i] = StripQuotes(headers[i]);
+            sheetRow++;
 
-            int listCol = System.Array.IndexOf(headers, LIST);
-            int itemCol = System.Array.IndexOf(headers, ITEM);
-            int qtyCol = System.Array.IndexOf(headers, QTY);
-            int posCol = System.Array.IndexOf(headers, POS);
-            int completedCol = System.Array.IndexOf(headers, DONE);
-            int idCol = System.Array.IndexOf(headers, ID);
+            var values = line.Split(',');
+            string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : DEFAULT_LIST;
+            string itemName = itemCol >= 0 && itemCol < values.Length ? StripQuotes(values[itemCol]) : string.Empty;
+            string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? StripQuotes(values[qtyCol]) : "0";
+            string posStr = posCol >= 0 && posCol < values.Length ? StripQuotes(values[posCol]) : "-1";
+            string completedStr = completedCol >= 0 && completedCol < values.Length ? StripQuotes(values[completedCol]) : "false";
+            string id = idCol >= 0 && idCol < values.Length ? StripQuotes(values[idCol]) : null;
 
-            // Paso 3: evitar eventos mientras se reconstruyen las listas
-            manager.BeginUpdate();
-            manager.Clear();
+            if (string.IsNullOrEmpty(itemName))
+                continue;
 
-            int row = 1; // la fila de cabecera ya se leyó
-            while (csv.Read())
-            {
-                var values = csv.Context.Record;
-                if (values == null || values.Length == 0)
-                    continue;
+            int qty = 0; int.TryParse(qtyStr, out qty);
+            int pos = -1; int.TryParse(posStr, out pos);
+            bool completed = false; bool.TryParse(completedStr, out completed);
 
-                row++;
-
-                string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : DEFAULT_LIST;
-                string itemName = itemCol >= 0 && itemCol < values.Length ? StripQuotes(values[itemCol]) : string.Empty;
-                string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? StripQuotes(values[qtyCol]) : "0";
-                string posStr = posCol >= 0 && posCol < values.Length ? StripQuotes(values[posCol]) : "-1";
-                string completedStr = completedCol >= 0 && completedCol < values.Length ? StripQuotes(values[completedCol]) : "false";
-                string id = idCol >= 0 && idCol < values.Length ? StripQuotes(values[idCol]) : null;
-
-                int qty = 0;
-                int.TryParse(qtyStr, out qty);
-                int pos = -1;
-                int.TryParse(posStr, out pos);
-                bool completed = false;
-                bool.TryParse(completedStr, out completed);
-
-                if (string.IsNullOrEmpty(itemName))
-                    continue;
-
-                int column = itemCol >= 0 ? itemCol + 1 : -1;
-                manager.AddItem(listName, itemName, qty, pos, row, column, completed, id);
-            }
-
-            manager.EndUpdate();
+            int column = itemCol >= 0 ? itemCol + 1 : -1;
+            manager.AddItem(listName, itemName, qty, pos, sheetRow, column, completed, id);
         }
+
+        manager.EndUpdate();
 
         Debug.Log("Listas cargadas desde Google Sheets");
     }
@@ -222,6 +211,43 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
 
             serializableLists.Add(sList);
         }
+    }
+
+    IEnumerator UploadCoroutine(List<ShoppingList> lists)
+    {
+        var serializableLists = new List<SerializableList>();
+        foreach (var list in lists)
+        {
+            var sList = new SerializableList
+            {
+                name = list.name,
+                items = new List<SerializableItem>()
+            };
+
+            foreach (var item in list.items)
+            {
+                sList.items.Add(new SerializableItem
+                {
+                    id = item.id,
+                    name = item.name,
+                    quantity = item.quantity,
+                    position = item.position,
+                    completed = item.completed
+                });
+            }
+
+            serializableLists.Add(sList);
+        }
+
+        var wrapper = new Wrapper { lists = serializableLists };
+        string json = JsonUtility.ToJson(wrapper);
+        byte[] data = System.Text.Encoding.UTF8.GetBytes(json);
+
+        UnityWebRequest request = new UnityWebRequest(scriptUrl, "POST");
+        request.uploadHandler = new UploadHandlerRaw(data);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+        yield return request.SendWebRequest();
 
         var wrapper = new Wrapper { lists = serializableLists };
         string json = JsonUtility.ToJson(wrapper);
