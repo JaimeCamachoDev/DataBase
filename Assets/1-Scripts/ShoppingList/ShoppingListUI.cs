@@ -13,6 +13,7 @@ public class ShoppingListUI : MonoBehaviour
     public Transform itemContainer;
     public Transform completedItemContainer;
     public GameObject itemPrefab;
+    public ShoppingListItemEditorUI editor;
 
     void Start()
     {
@@ -76,7 +77,7 @@ public class ShoppingListUI : MonoBehaviour
                 go.transform.SetSiblingIndex(item.position);
                 var ui = go.GetComponentInChildren<ShoppingListItemUI>();
                 if (ui != null)
-                    ui.Setup(manager, list.name, item);
+                    ui.Setup(manager, list.name, item, editor);
             }
         }
 
