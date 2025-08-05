@@ -2,10 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Simple pop‑up window that allows editing the fields of a
-/// <see cref="ShoppingItem"/>.
-/// </summary>
 public class ShoppingListItemEditorUI : MonoBehaviour
 {
     public ShoppingListManager manager;
@@ -29,7 +25,6 @@ public class ShoppingListItemEditorUI : MonoBehaviour
             applyButton.onClick.RemoveListener(ApplyChanges);
     }
 
-    /// <summary>Populates the editor UI with the data of the selected item.</summary>
     public void EditItem(ShoppingListItemUI ui)
     {
         currentItemUI = ui;
@@ -48,7 +43,6 @@ public class ShoppingListItemEditorUI : MonoBehaviour
         }
     }
 
-    /// <summary>Applies the changes back to the manager and closes the window.</summary>
     void ApplyChanges()
     {
         if (currentItemUI == null || manager == null)

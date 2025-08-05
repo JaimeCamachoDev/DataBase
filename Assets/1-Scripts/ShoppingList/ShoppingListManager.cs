@@ -3,78 +3,47 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-/// <summary>
-/// Central store of all shopping lists. Handles persistence and notifies
-/// listeners whenever the data changes.
-/// </summary>
 public class ShoppingListManager : MonoBehaviour
 {
-    /// <summary>All lists currently loaded in memory.</summary>
     public List<ShoppingList> lists = new List<ShoppingList>();
 
-    /// <summary>Event fired whenever the contents of <see cref="lists"/> change.</summary>
     public event Action ListsChanged;
 
-    // Prevents event spam during bulk updates
     bool suppressEvents = false;
-
-    // Indicates that data changed while events were suppressed
-    bool needsSave = false;
-
-    // Location on disk where data is saved between sessions
-    
     string SavePath => Path.Combine(Application.persistentDataPath, "shoppingLists.json");
 
-    void Awake() => LoadFromDisk();
+    void Awake()
+    {
+        LoadFromDisk();
+    }
 
-    /// <summary>Helper that persists and notifies only when eventos are allowed.</summary>
     void NotifyChanged()
     {
         if (!suppressEvents)
-        {
-            SaveToDisk();
             ListsChanged?.Invoke();
-        }
-        else
-        {
-            needsSave = true;
-        }
+        SaveToDisk();
     }
 
-    /// <summary>Call before performing many changes to silence events temporarily.</summary>
-    public void BeginUpdate()
-    {
-        suppressEvents = true;
-        needsSave = false;
-    }
+    public void BeginUpdate() => suppressEvents = true;
 
-    /// <summary>Re-enables events and optionally saves once if changes occurred.</summary>
     public void EndUpdate()
     {
         suppressEvents = false;
-        if (needsSave)
-        {
-            needsSave = false;
-            SaveToDisk();
-            ListsChanged?.Invoke();
-        }
+        NotifyChanged();
     }
 
-    /// <summary>Remove all lists and notify listeners.</summary>
     public void Clear()
     {
         lists.Clear();
         NotifyChanged();
     }
 
-    /// <summary>Create a new empty list.</summary>
     public void AddList(string name)
     {
         lists.Add(new ShoppingList { name = name });
         NotifyChanged();
     }
 
-    /// <summary>Add a new item to the specified list.</summary>
     public void AddItem(string listName, string itemName, int quantity, int position = -1, int row = -1, int column = -1, bool completed = false, string id = null)
     {
         var list = lists.Find(l => l.name == listName);
@@ -106,7 +75,6 @@ public class ShoppingListManager : MonoBehaviour
         NotifyChanged();
     }
 
-    /// <summary>Toggle the completion state of an item.</summary>
     public void SetItemCompleted(string listName, string itemId, bool completed)
     {
         var list = lists.Find(l => l.name == listName);
@@ -119,7 +87,6 @@ public class ShoppingListManager : MonoBehaviour
         NotifyChanged();
     }
 
-    /// <summary>Modify the fields of an existing item.</summary>
     public void UpdateItem(string listName, ShoppingItem item, string newName, int quantity, bool completed)
     {
         var list = lists.Find(l => l.name == listName);
@@ -134,7 +101,6 @@ public class ShoppingListManager : MonoBehaviour
         NotifyChanged();
     }
 
-    /// <summary>Remove an item from its list.</summary>
     public void RemoveItem(string listName, string itemId)
     {
         var list = lists.Find(l => l.name == listName);
@@ -151,7 +117,6 @@ public class ShoppingListManager : MonoBehaviour
         NotifyChanged();
     }
 
-    /// <summary>Serialize the lists to disk so they persist between sessions.</summary>
     void SaveToDisk()
     {
         try
@@ -166,12 +131,10 @@ public class ShoppingListManager : MonoBehaviour
         }
     }
 
-    /// <summary>Load previously saved lists from disk.</summary>
     void LoadFromDisk()
     {
         if (!File.Exists(SavePath))
             return;
-
         try
         {
             string json = File.ReadAllText(SavePath);

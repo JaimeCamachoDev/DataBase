@@ -2,17 +2,17 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Builds and maintains the visual representation of the shopping lists.
-/// </summary>
 public class ShoppingListUI : MonoBehaviour
 {
     [Header("References")]
     public ShoppingListManager manager;
+    public TMP_InputField listInput;
+    public TMP_InputField itemInput;
+    public TMP_InputField quantityInput;
+    public TMP_InputField positionInput;
     public Transform itemContainer;
     public Transform completedItemContainer;
     public GameObject itemPrefab;
-    public ShoppingListItemEditorUI editor;
 
     void Start()
     {
@@ -27,37 +27,38 @@ public class ShoppingListUI : MonoBehaviour
             manager.ListsChanged -= RebuildItems;
     }
 
-    /// <summary>Creates a placeholder item for quick testing.</summary>
     public void AddItem()
     {
         if (manager == null) return;
-
-        string listName = "Lista";
-        string itemName = "Nuevo Item";
-        int qty = 1;
+        string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
+        string itemName = string.IsNullOrEmpty(itemInput.text) ? "Item" : itemInput.text;
+        int qty = 0;
+        if (!int.TryParse(quantityInput.text, out qty))
+            qty = 0;
         int pos = -1;
-
+        if (positionInput != null && !int.TryParse(positionInput.text, out pos))
+            pos = -1;
         manager.AddItem(listName, itemName, qty, pos);
+        itemInput.text = string.Empty;
+        quantityInput.text = string.Empty;
+        if (positionInput != null)
+            positionInput.text = string.Empty;
     }
 
-    /// <summary>Removes the last item of the default list, if any.</summary>
     public void RemoveItem()
     {
         if (manager == null) return;
-        string listName = "Lista";
+        string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
         var list = manager.lists.Find(l => l.name == listName);
-        var item = list != null && list.items.Count > 0 ? list.items[list.items.Count - 1] : null;
+        var item = list != null ? list.items.Find(i => i.name == itemInput.text) : null;
         if (item != null)
             manager.RemoveItem(listName, item.id);
     }
 
-    /// <summary>Rebuilds all item entries in the UI.</summary>
     public void RebuildItems()
     {
         if (manager == null || itemContainer == null || itemPrefab == null) return;
 
-        // Start from a clean slate and recreate the entire UI based on the
-        // current data stored in the manager.
         foreach (Transform child in itemContainer)
             Destroy(child.gameObject);
         if (completedItemContainer != null)
@@ -75,7 +76,7 @@ public class ShoppingListUI : MonoBehaviour
                 go.transform.SetSiblingIndex(item.position);
                 var ui = go.GetComponentInChildren<ShoppingListItemUI>();
                 if (ui != null)
-                    ui.Setup(manager, list.name, item, editor);
+                    ui.Setup(manager, list.name, item);
             }
         }
 

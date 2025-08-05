@@ -2,19 +2,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Handles the UI for a single <see cref="ShoppingItem"/> entry and responds
-/// to swipe gestures for delete/complete/edit actions.
-/// </summary>
 public class ShoppingListItemUI : MonoBehaviour
 {
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI quantityText;
     public SwipeToDeleteItem swipe;
 
-    // References to the data this visual element represents
-    [SerializeField] private ShoppingListManager manager;
-    [SerializeField] private ShoppingListItemEditorUI editor;
+    // Expose the data this prefab represents
+    public ShoppingListManager manager;
+    public ShoppingListItemEditorUI editor;
     public string listName;
     public ShoppingItem item;
 
@@ -30,15 +26,19 @@ public class ShoppingListItemUI : MonoBehaviour
         }
     }
 
-    void Start() => Refresh();
+    void Start()
+    {
+        if (manager == null)
+            manager = FindAnyObjectByType<ShoppingListManager>();
+        if (editor == null)
+            editor = FindObjectOfType<ShoppingListItemEditorUI>(true); // include inactive objects
+        Refresh();
+    }
 
-    /// <summary>Initializes the UI with the provided data references.</summary>
-    public void Setup(ShoppingListManager manager, string listName, ShoppingItem item, ShoppingListItemEditorUI editor = null)
+    public void Setup(ShoppingListManager manager, string listName, ShoppingItem item)
     {
         if (manager != null)
             this.manager = manager;
-        if (editor != null)
-            this.editor = editor;
         this.listName = listName;
         this.item = item;
         if (this.item != null)
@@ -47,7 +47,7 @@ public class ShoppingListItemUI : MonoBehaviour
         Refresh();
     }
 
-    /// <summary>Updates texts to reflect the current item data.</summary>
+    // Update texts to reflect the current item data
     public void Refresh()
     {
         if (nameText != null)
@@ -67,7 +67,9 @@ public class ShoppingListItemUI : MonoBehaviour
     void OnDelete()
     {
         if (manager != null)
+        {
             manager.RemoveItem(listName, item.id);
+        }
     }
 
     void OnComplete()

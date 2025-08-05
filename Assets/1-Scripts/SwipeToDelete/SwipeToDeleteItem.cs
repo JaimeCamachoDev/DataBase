@@ -60,10 +60,8 @@ public class SwipeToDeleteItem : MonoBehaviour, IPointerDownHandler, IDragHandle
         {
             Debug.Log("💥 Item eliminado por swipe");
             swipePerformed = true;
-            // Notify listeners that a delete action was requested so that
-            // higher-level components can update data and remove the UI item
-            // themselves.
             onDelete.Invoke();
+            Destroy(gameObject.transform.parent.gameObject);
         }
         else if (finalDelta >= deleteThreshold)
         {
