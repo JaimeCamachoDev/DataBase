@@ -186,33 +186,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         }
     }
 
-    IEnumerator UploadCoroutine(List<ShoppingList> lists)
-    {
-        var serializableLists = new List<SerializableList>();
-        foreach (var list in lists)
-        {
-            var sList = new SerializableList
-            {
-                name = list.name,
-                items = new List<SerializableItem>()
-            };
-
-            foreach (var item in list.items)
-            {
-                sList.items.Add(new SerializableItem
-                {
-                    id = item.id,
-                    name = item.name,
-                    quantity = item.quantity,
-                    position = item.position,
-                    completed = item.completed
-                });
-            }
-
-            serializableLists.Add(sList);
-        }
-    }
-
+ 
     IEnumerator UploadCoroutine(List<ShoppingList> lists)
     {
         var serializableLists = new List<SerializableList>();
