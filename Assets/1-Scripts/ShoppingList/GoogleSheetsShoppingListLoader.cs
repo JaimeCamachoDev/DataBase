@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
+
 /// <summary>
 /// Sincroniza la lista de la compra con una hoja de cálculo de Google.
 /// 1. Descarga la hoja en formato CSV y rellena <see cref="ShoppingListManager"/>.
@@ -210,6 +211,43 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
 
             serializableLists.Add(sList);
         }
+    }
+
+    IEnumerator UploadCoroutine(List<ShoppingList> lists)
+    {
+        var serializableLists = new List<SerializableList>();
+        foreach (var list in lists)
+        {
+            var sList = new SerializableList
+            {
+                name = list.name,
+                items = new List<SerializableItem>()
+            };
+
+            foreach (var item in list.items)
+            {
+                sList.items.Add(new SerializableItem
+                {
+                    id = item.id,
+                    name = item.name,
+                    quantity = item.quantity,
+                    position = item.position,
+                    completed = item.completed
+                });
+            }
+
+            serializableLists.Add(sList);
+        }
+
+        var wrapper = new Wrapper { lists = serializableLists };
+        string json = JsonUtility.ToJson(wrapper);
+        byte[] data = System.Text.Encoding.UTF8.GetBytes(json);
+
+        UnityWebRequest request = new UnityWebRequest(scriptUrl, "POST");
+        request.uploadHandler = new UploadHandlerRaw(data);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+        yield return request.SendWebRequest();
 
         var wrapper = new Wrapper { lists = serializableLists };
         string json = JsonUtility.ToJson(wrapper);
