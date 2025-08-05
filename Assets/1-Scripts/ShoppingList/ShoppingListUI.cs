@@ -1,64 +1,43 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class ShoppingListUI : MonoBehaviour
 {
-    [Header("References")]
+    [Header("Referencias")]
     public ShoppingListManager manager;
-    public TMP_InputField listInput;
-    public TMP_InputField itemInput;
-    public TMP_InputField quantityInput;
-    public TMP_InputField positionInput;
     public Transform itemContainer;
     public Transform completedItemContainer;
     public GameObject itemPrefab;
 
     void Start()
     {
+        // Nos suscribimos al evento para refrescar la interfaz cuando cambien las listas
         if (manager != null)
             manager.ListsChanged += RebuildItems;
+        // Construimos la lista inicial
         RebuildItems();
     }
 
     void OnDestroy()
     {
+        // Cancelamos la suscripción al destruir el objeto
         if (manager != null)
             manager.ListsChanged -= RebuildItems;
     }
 
     public void AddItem()
     {
+        // Añade un elemento con valores por defecto
         if (manager == null) return;
-        string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
-        string itemName = string.IsNullOrEmpty(itemInput.text) ? "Item" : itemInput.text;
-        int qty = 0;
-        if (!int.TryParse(quantityInput.text, out qty))
-            qty = 0;
-        int pos = -1;
-        if (positionInput != null && !int.TryParse(positionInput.text, out pos))
-            pos = -1;
-        manager.AddItem(listName, itemName, qty, pos);
-        itemInput.text = string.Empty;
-        quantityInput.text = string.Empty;
-        if (positionInput != null)
-            positionInput.text = string.Empty;
-    }
-
-    public void RemoveItem()
-    {
-        if (manager == null) return;
-        string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
-        var list = manager.lists.Find(l => l.name == listName);
-        var item = list != null ? list.items.Find(i => i.name == itemInput.text) : null;
-        if (item != null)
-            manager.RemoveItem(listName, item.id);
+        manager.AddItem("List", "Item", 0, -1);
     }
 
     public void RebuildItems()
     {
+        // Si faltan referencias no hacemos nada
         if (manager == null || itemContainer == null || itemPrefab == null) return;
 
+        // Eliminamos elementos anteriores
         foreach (Transform child in itemContainer)
             Destroy(child.gameObject);
         if (completedItemContainer != null)
@@ -67,6 +46,7 @@ public class ShoppingListUI : MonoBehaviour
                 Destroy(child.gameObject);
         }
 
+        // Instanciamos un prefab por cada item de cada lista
         foreach (var list in manager.lists)
         {
             foreach (var item in list.items)
@@ -80,6 +60,7 @@ public class ShoppingListUI : MonoBehaviour
             }
         }
 
+        // Forzamos el recalculo del layout para que la UI se actualice
         Canvas.ForceUpdateCanvases();
         var parentRect = itemContainer != null ? itemContainer.parent as RectTransform : null;
         if (itemContainer != null)
