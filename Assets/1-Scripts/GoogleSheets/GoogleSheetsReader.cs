@@ -1,8 +1,8 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
-using System.IO;
-using Microsoft.VisualBasic.FileIO;
+using System.Text;
 
 public class GoogleSheetsReader : MonoBehaviour
 {
@@ -22,43 +22,67 @@ public class GoogleSheetsReader : MonoBehaviour
         if (request.result != UnityWebRequest.Result.Success)
         {
             Debug.LogError($"Error reading sheet: {request.error}");
+            yield break;
         }
-        else
+
+        string[] lines = request.downloadHandler.text.Split('\n');
+        if (lines.Length == 0)
+            yield break;
+
+        string[] headers = ParseCsvLine(lines[0]);
+
+        for (int i = 1; i < lines.Length; i++)
         {
-            string data = request.downloadHandler.text;
-            using (var reader = new StringReader(data))
-            using (var parser = new TextFieldParser(reader))
+            if (string.IsNullOrWhiteSpace(lines[i]))
+                continue;
+
+            string[] values = ParseCsvLine(lines[i]);
+            StringBuilder row = new StringBuilder();
+
+            for (int j = 0; j < headers.Length && j < values.Length; j++)
             {
-                parser.TextFieldType = FieldType.Delimited;
-                parser.SetDelimiters(",");
-                parser.HasFieldsEnclosedInQuotes = true;
+                if (j > 0) row.Append(", ");
+                row.AppendFormat("{0}: {1}", headers[j].Trim(), values[j].Trim());
+            }
 
-                if (parser.EndOfData)
+            if (row.Length > 0)
+                Debug.Log(row.ToString());
+        }
+    }
+
+    private string[] ParseCsvLine(string line)
+    {
+        List<string> fields = new List<string>();
+        bool inQuotes = false;
+        StringBuilder field = new StringBuilder();
+
+        for (int i = 0; i < line.Length; i++)
+        {
+            char c = line[i];
+            if (c == '"')
+            {
+                if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
                 {
-                    Debug.LogWarning("Sheet is empty");
-                    yield break;
+                    field.Append('"');
+                    i++;
                 }
-
-                // Use the first row as column names
-                string[] headers = parser.ReadFields();
-
-                while (!parser.EndOfData)
+                else
                 {
-                    string[] values = parser.ReadFields();
-                    if (values == null || values.Length == 0)
-                        continue;
-
-                    System.Text.StringBuilder row = new System.Text.StringBuilder();
-
-                    for (int j = 0; j < headers.Length && j < values.Length; j++)
-                    {
-                        if (j > 0) row.Append(", ");
-                        row.AppendFormat("{0}: {1}", headers[j].Trim(), values[j].Trim());
-                    }
-
-                    Debug.Log(row.ToString());
+                    inQuotes = !inQuotes;
                 }
             }
+            else if (c == ',' && !inQuotes)
+            {
+                fields.Add(field.ToString());
+                field.Length = 0;
+            }
+            else if (c != '\r')
+            {
+                field.Append(c);
+            }
         }
+
+        fields.Add(field.ToString());
+        return fields.ToArray();
     }
 }
