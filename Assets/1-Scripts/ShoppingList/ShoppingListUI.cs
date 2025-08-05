@@ -6,10 +6,10 @@ public class ShoppingListUI : MonoBehaviour
 {
     [Header("References")]
     public ShoppingListManager manager;
-    public TMP_InputField listInput;
-    public TMP_InputField itemInput;
-    public TMP_InputField quantityInput;
-    public TMP_InputField positionInput;
+    //public TMP_InputField listInput;
+    //public TMP_InputField itemInput;
+    //public TMP_InputField quantityInput;
+    //public TMP_InputField positionInput;
     public Transform itemContainer;
     public Transform completedItemContainer;
     public GameObject itemPrefab;
@@ -31,27 +31,28 @@ public class ShoppingListUI : MonoBehaviour
     public void AddItem()
     {
         if (manager == null) return;
-        string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
-        string itemName = string.IsNullOrEmpty(itemInput.text) ? "Item" : itemInput.text;
-        int qty = 0;
-        if (!int.TryParse(quantityInput.text, out qty))
-            qty = 0;
+
+
+
+        string listName = "Lista";
+        string itemName = "Nuevo Item";
+        int qty = 1;
         int pos = -1;
-        if (positionInput != null && !int.TryParse(positionInput.text, out pos))
-            pos = -1;
+
+
         manager.AddItem(listName, itemName, qty, pos);
-        itemInput.text = string.Empty;
-        quantityInput.text = string.Empty;
-        if (positionInput != null)
-            positionInput.text = string.Empty;
+        //itemInput.text = string.Empty;
+        //quantityInput.text = string.Empty;
+        //if (positionInput != null)
+        //    positionInput.text = string.Empty;
     }
 
     public void RemoveItem()
     {
         if (manager == null) return;
-        string listName = string.IsNullOrEmpty(listInput.text) ? "List" : listInput.text;
+        string listName = "Lista";
         var list = manager.lists.Find(l => l.name == listName);
-        var item = list != null ? list.items.Find(i => i.name == itemInput.text) : null;
+        var item = list != null && list.items.Count > 0 ? list.items[list.items.Count - 1] : null;
         if (item != null)
             manager.RemoveItem(listName, item.id);
     }

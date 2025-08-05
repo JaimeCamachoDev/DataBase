@@ -2,11 +2,13 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
 using System.IO;
-using Microsoft.VisualBasic.FileIO;
+using CsvHelper;
+using CsvHelper.Configuration;
+using System.Globalization;
 
 public class GoogleSheetsReader : MonoBehaviour
 {
-    [Tooltip("Public Google Sheets export link")] 
+    [Tooltip("Public Google Sheets export link")]
     public string sheetUrl = "https://docs.google.com/spreadsheets/d/13PsACix0amVNjdoSWasaFPId-VAtGShmd6gMxgkFNy8/export?format=csv";
 
     void Start()
@@ -27,33 +29,33 @@ public class GoogleSheetsReader : MonoBehaviour
         {
             string data = request.downloadHandler.text;
             using (var reader = new StringReader(data))
-            using (var parser = new TextFieldParser(reader))
+            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                parser.TextFieldType = FieldType.Delimited;
-                parser.SetDelimiters(",");
-                parser.HasFieldsEnclosedInQuotes = true;
-
-                if (parser.EndOfData)
+                BadDataFound = null,
+                TrimOptions = TrimOptions.Trim
+            }))
+            {
+                if (!csv.Read())
                 {
                     Debug.LogWarning("Sheet is empty");
                     yield break;
                 }
 
-                // Use the first row as column names
-                string[] headers = parser.ReadFields();
+                csv.ReadHeader();
+                var headers = csv.HeaderRecord;
 
-                while (!parser.EndOfData)
+                while (csv.Read())
                 {
-                    string[] values = parser.ReadFields();
-                    if (values == null || values.Length == 0)
+                    var record = csv.Context.Record;
+                    if (record == null || record.Length == 0)
                         continue;
 
                     System.Text.StringBuilder row = new System.Text.StringBuilder();
 
-                    for (int j = 0; j < headers.Length && j < values.Length; j++)
+                    for (int j = 0; j < headers.Length && j < record.Length; j++)
                     {
                         if (j > 0) row.Append(", ");
-                        row.AppendFormat("{0}: {1}", headers[j].Trim(), values[j].Trim());
+                        row.AppendFormat("{0}: {1}", headers[j].Trim(), record[j].Trim());
                     }
 
                     Debug.Log(row.ToString());
