@@ -1,9 +1,10 @@
-function doGet() {
+const MANAGER_URL = '<REPLACE_WITH_MANAGER_ENDPOINT>';
+
+function getListsFromSheet() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   const data = sheet.getDataRange().getValues();
   if (data.length === 0) {
-    return ContentService.createTextOutput(JSON.stringify({ lists: [] }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return { lists: [] };
   }
   const headers = data.shift().map(h => h.toString().trim());
   const idIdx = headers.indexOf('Id');
@@ -29,12 +30,10 @@ function doGet() {
     }
     lists[listName].items.push({ id: id, name: itemName, quantity: quantity, position: position, completed: completed });
   });
-  return ContentService.createTextOutput(JSON.stringify({ lists: Object.values(lists) }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return { lists: Object.values(lists) };
 }
 
-function doPost(e) {
-  const data = JSON.parse(e.postData.contents);
+function writeListsToSheet(data) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   sheet.clear();
   sheet.appendRow(['Id', 'List', 'Item', 'Units', 'Position', 'Completed']);
@@ -45,5 +44,41 @@ function doPost(e) {
       sheet.appendRow([item.id || '', list.name, item.name, item.quantity, pos, completed ? 'true' : 'false']);
     });
   });
+}
+
+function doGet() {
+  return ContentService.createTextOutput(JSON.stringify(getListsFromSheet()))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  setSyncing(true);
+  writeListsToSheet(data);
+  setSyncing(false);
   return ContentService.createTextOutput('OK');
 }
+
+function onEdit(e) {
+  if (isSyncing()) return;
+  syncToManager();
+}
+
+function syncToManager() {
+  const payload = JSON.stringify(getListsFromSheet());
+  UrlFetchApp.fetch(MANAGER_URL, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: payload,
+    muteHttpExceptions: true
+  });
+}
+
+function isSyncing() {
+  return PropertiesService.getScriptProperties().getProperty('SYNCING') === '1';
+}
+
+function setSyncing(flag) {
+  PropertiesService.getScriptProperties().setProperty('SYNCING', flag ? '1' : '0');
+}
+
