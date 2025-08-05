@@ -10,6 +10,7 @@ public class ShoppingListManager : MonoBehaviour
     public event Action ListsChanged;
 
     bool suppressEvents = false;
+    bool needsSave = false;
     string SavePath => Path.Combine(Application.persistentDataPath, "shoppingLists.json");
 
     void Awake()
@@ -19,9 +20,14 @@ public class ShoppingListManager : MonoBehaviour
 
     void NotifyChanged()
     {
-        if (!suppressEvents)
-            ListsChanged?.Invoke();
+        if (suppressEvents)
+        {
+            needsSave = true;
+            return;
+        }
+
         SaveToDisk();
+        ListsChanged?.Invoke();
     }
 
     public void BeginUpdate()

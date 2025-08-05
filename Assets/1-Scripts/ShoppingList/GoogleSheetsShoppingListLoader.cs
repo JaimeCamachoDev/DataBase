@@ -1,8 +1,6 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
-using System.IO;
-using Microsoft.VisualBasic.FileIO;
 
 public class GoogleSheetsShoppingListLoader : MonoBehaviour
 {
@@ -120,6 +118,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
 
         }
 
+        manager.EndUpdate();
         Debug.Log("Loaded shopping lists from sheet");
     }
 
