@@ -24,7 +24,7 @@ Este repositorio incluye un script de ejemplo (`GoogleSheetsReader`) para leer u
 
 Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que proporcionan la estructura mínima para una aplicación de listas:
 
-- **ShoppingItem**: almacena el nombre del artículo, la cantidad, la lista a la que pertenece, la posición dentro de la lista y su ubicación (fila y columna) en la hoja de cálculo.
+- **ShoppingItem**: almacena el nombre del artículo, la cantidad, la lista a la que pertenece, la posición dentro de la lista, la fecha de última modificación y su ubicación (fila y columna) en la hoja de cálculo.
 - **ShoppingList**: agrupa varios `ShoppingItem` bajo un nombre de lista.
 - **ShoppingListManager**: permite crear listas y añadir elementos desde código.
 - **GoogleSheetsShoppingListLoader**: lee una hoja de cálculo publicada en formato CSV e incorpora los datos al `ShoppingListManager`, además de enviar los cambios a un script de Apps Script para mantener la hoja sincronizada.
@@ -43,6 +43,18 @@ Se han añadido scripts para manipular y visualizar las listas en tiempo de ejec
 > **⚠️ IMPORTANTE:** cada vez que edites el script de Google Apps debes crear un **nuevo deployment** y **actualizar la URL** en Unity para que los cambios surtan efecto. Si olvidas este paso, la aplicación seguirá usando la versión anterior del script.
 
 Vincula estos componentes a tu panel de UI, asigna el prefab de item y tendrás la interfaz sincronizada con la hoja de cálculo de Google.
+
+### Sincronización en tiempo real con Apps Script + servidor WebSocket
+
+Para reducir la latencia entre dispositivos se añade un pequeño servidor (`realtime-server.js`) que recibe las notificaciones del script de Apps Script y las retransmite a través de WebSockets.
+
+1. Ejecuta `npm install` y luego `node realtime-server.js` para ponerlo en marcha.
+2. Añade una columna **Updated** en la hoja de cálculo (ISO 8601) para llevar control de versiones.
+3. Copia la URL pública de `http://<host>:3000/sync` en la constante `MANAGER_URL` de `AppsScript.gs` y vuelve a desplegar el script.
+4. En Unity asigna el campo **Manager WebSocket Url** del `GoogleSheetsShoppingListLoader` con `ws://<host>:3000`.
+5. Cada edición de la hoja enviará los datos al servidor, que los emitirá a todos los clientes conectados; éstos recargarán la lista al instante sin necesidad de reiniciar la app.
+
+Este flujo evita el polling constante y mantiene sincronizadas todas las instancias con una latencia mínima.
 
    
 <footer>

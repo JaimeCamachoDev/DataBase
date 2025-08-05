@@ -13,4 +13,6 @@ public class ShoppingItem
     // Row and column location inside the Google Sheet (1-based indexes)
     public int row;
     public int column;
+    // ISO 8601 timestamp of last modification
+    public string updated;
 }

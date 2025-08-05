@@ -1,5 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
 
@@ -14,6 +18,9 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     [Tooltip("URL del script de Apps Script para subir los cambios")]
     public string scriptUrl;
 
+    [Tooltip("URL del servidor WebSocket que emite cambios en tiempo real")]
+    public string managerWebSocketUrl;
+
     [Tooltip("Recargar datos cada N segundos (0 desactiva la recarga automática)")]
     public float refreshInterval = 0f;
 
@@ -24,11 +31,15 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     const string POSITION_HEADER = "Position";
     const string COMPLETED_HEADER = "Completed";
     const string ID_HEADER = "Id";
+    const string UPDATED_HEADER = "Updated";
     const string DEFAULT_LIST_NAME = "List";
 
     // Variables de control para la subida de datos
     bool uploadInProgress;
     bool pendingUpload;
+
+    ClientWebSocket webSocket;
+    bool refreshRequested;
 
     void Start()
     {
@@ -51,6 +62,10 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
                 if (refreshInterval > 0f)
                     StartCoroutine(RefreshPeriodically());
             }
+
+            // Conectamos al servidor de sincronización para recibir notificaciones
+            if (!string.IsNullOrEmpty(managerWebSocketUrl))
+                ConnectWebSocket();
         }
         else
         {
@@ -63,6 +78,23 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         // Dejamos de escuchar el evento al destruirse
         if (manager != null)
             manager.ListsChanged -= OnListsChanged;
+
+        // Cerramos la conexión WebSocket si existe
+        if (webSocket != null)
+        {
+            try { webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None); } catch {}
+            webSocket.Dispose();
+        }
+    }
+
+    void Update()
+    {
+        // Si se ha solicitado una recarga desde el hilo del WebSocket
+        if (refreshRequested)
+        {
+            refreshRequested = false;
+            Refresh();
+        }
     }
 
     void OnApplicationPause(bool pause)
@@ -97,6 +129,37 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         }
     }
 
+    async void ConnectWebSocket()
+    {
+        webSocket = new ClientWebSocket();
+        try
+        {
+            await webSocket.ConnectAsync(new System.Uri(managerWebSocketUrl), CancellationToken.None);
+            _ = ReceiveLoop();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error de WebSocket: {ex.Message}");
+        }
+    }
+
+    async Task ReceiveLoop()
+    {
+        var buffer = new byte[1024];
+        while (webSocket != null && webSocket.State == WebSocketState.Open)
+        {
+            var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            if (result.MessageType == WebSocketMessageType.Close)
+            {
+                await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+                break;
+            }
+
+            // Al recibir cualquier mensaje pedimos refrescar la hoja
+            refreshRequested = true;
+        }
+    }
+
     IEnumerator Load()
     {
         // Realiza la petición HTTP para obtener el CSV
@@ -124,6 +187,7 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
         int posCol = System.Array.IndexOf(headers, POSITION_HEADER);
         int completedCol = System.Array.IndexOf(headers, COMPLETED_HEADER);
         int idCol = System.Array.IndexOf(headers, ID_HEADER);
+        int updatedCol = System.Array.IndexOf(headers, UPDATED_HEADER);
 
         manager.BeginUpdate();
         manager.Clear();
@@ -154,7 +218,8 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             int row = i + 1; // índice de fila empezando en 1 incluyendo la cabecera
             int column = itemCol >= 0 ? itemCol + 1 : -1;
             string id = idCol >= 0 && idCol < values.Length ? StripQuotes(values[idCol]) : null;
-            manager.AddItem(listName, itemName, qty, pos, row, column, completed, id);
+            string updated = updatedCol >= 0 && updatedCol < values.Length ? StripQuotes(values[updatedCol]) : null;
+            manager.AddItem(listName, itemName, qty, pos, row, column, completed, id, updated);
         }
 
         manager.EndUpdate();
@@ -198,7 +263,8 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
                     name = item.name,
                     quantity = item.quantity,
                     position = item.position,
-                    completed = item.completed
+                    completed = item.completed,
+                    updated = item.updated
                 });
             }
             serializableLists.Add(sList);
@@ -234,6 +300,6 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
     class SerializableList { public string name; public List<SerializableItem> items; }
 
     [System.Serializable]
-    class SerializableItem { public string id; public string name; public int quantity; public int position; public bool completed; }
+    class SerializableItem { public string id; public string name; public int quantity; public int position; public bool completed; public string updated; }
 }
 
