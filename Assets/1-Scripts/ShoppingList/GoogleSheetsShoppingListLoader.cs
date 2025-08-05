@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
+using System.IO;
+using Microsoft.VisualBasic.FileIO;
 
 public class GoogleSheetsShoppingListLoader : MonoBehaviour
 {
@@ -68,56 +70,66 @@ public class GoogleSheetsShoppingListLoader : MonoBehaviour
             yield break;
         }
 
-        string[] lines = request.downloadHandler.text.Split('\n');
-        if (lines.Length == 0)
-            yield break;
-
-        // Trim the header line and each column title to avoid issues with
-        // Windows line endings or extra whitespace that prevent column
-        // detection (e.g. "Units\r" not matching "Units").
-        string[] headers = lines[0].Trim().Split(',');
-        for (int i = 0; i < headers.Length; i++)
-            headers[i] = StripQuotes(headers[i]);
-
-        int listCol = System.Array.IndexOf(headers, listHeader);
-        int itemCol = System.Array.IndexOf(headers, itemHeader);
-        int qtyCol = System.Array.IndexOf(headers, quantityHeader);
-        int posCol = System.Array.IndexOf(headers, positionHeader);
-        int completedCol = System.Array.IndexOf(headers, completedHeader);
-        int idCol = System.Array.IndexOf(headers, idHeader);
-        manager.BeginUpdate();
-        manager.Clear();
-
-        for (int i = 1; i < lines.Length; i++)
+        using (var reader = new StringReader(request.downloadHandler.text))
+        using (var parser = new TextFieldParser(reader))
         {
-            string line = lines[i].Trim();
-            if (string.IsNullOrEmpty(line))
-                continue;
+            parser.TextFieldType = FieldType.Delimited;
+            parser.SetDelimiters(",");
+            parser.HasFieldsEnclosedInQuotes = true;
 
-            string[] values = line.Split(',');
-            string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : defaultListName;
+            if (parser.EndOfData)
+                yield break;
 
-            string itemName = itemCol >= 0 && itemCol < values.Length ? StripQuotes(values[itemCol]) : string.Empty;
-            string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? StripQuotes(values[qtyCol]) : "0";
-            string posStr = posCol >= 0 && posCol < values.Length ? StripQuotes(values[posCol]) : "-1";
-            string completedStr = completedCol >= 0 && completedCol < values.Length ? StripQuotes(values[completedCol]) : "false";
-            int qty = 0;
-            int.TryParse(qtyStr, out qty);
-            int pos = -1;
-            int.TryParse(posStr, out pos);
-            bool completed = false;
-            bool.TryParse(completedStr, out completed);
+            // Trim the header line and each column title to avoid issues with
+            // Windows line endings or extra whitespace that prevent column
+            // detection (e.g. "Units\r" not matching "Units").
+            string[] headers = parser.ReadFields();
+            for (int i = 0; i < headers.Length; i++)
+                headers[i] = StripQuotes(headers[i]);
 
-            if (string.IsNullOrEmpty(itemName))
-                continue;
+            int listCol = System.Array.IndexOf(headers, listHeader);
+            int itemCol = System.Array.IndexOf(headers, itemHeader);
+            int qtyCol = System.Array.IndexOf(headers, quantityHeader);
+            int posCol = System.Array.IndexOf(headers, positionHeader);
+            int completedCol = System.Array.IndexOf(headers, completedHeader);
+            int idCol = System.Array.IndexOf(headers, idHeader);
 
-            int row = i + 1; // 1-based row index including header
-            int column = itemCol >= 0 ? itemCol + 1 : -1;
-            string id = idCol >= 0 && idCol < values.Length ? StripQuotes(values[idCol]) : null;
-            manager.AddItem(listName, itemName, qty, pos, row, column, completed, id);
+            manager.BeginUpdate();
+            manager.Clear();
+
+            int row = 1; // header row already read
+            while (!parser.EndOfData)
+            {
+                string[] values = parser.ReadFields();
+                if (values == null || values.Length == 0)
+                    continue;
+
+                row++;
+
+                string listName = listCol >= 0 && listCol < values.Length ? StripQuotes(values[listCol]) : defaultListName;
+                string itemName = itemCol >= 0 && itemCol < values.Length ? StripQuotes(values[itemCol]) : string.Empty;
+                string qtyStr = qtyCol >= 0 && qtyCol < values.Length ? StripQuotes(values[qtyCol]) : "0";
+                string posStr = posCol >= 0 && posCol < values.Length ? StripQuotes(values[posCol]) : "-1";
+                string completedStr = completedCol >= 0 && completedCol < values.Length ? StripQuotes(values[completedCol]) : "false";
+                string id = idCol >= 0 && idCol < values.Length ? StripQuotes(values[idCol]) : null;
+
+                int qty = 0;
+                int.TryParse(qtyStr, out qty);
+                int pos = -1;
+                int.TryParse(posStr, out pos);
+                bool completed = false;
+                bool.TryParse(completedStr, out completed);
+
+                if (string.IsNullOrEmpty(itemName))
+                    continue;
+
+                int column = itemCol >= 0 ? itemCol + 1 : -1;
+                manager.AddItem(listName, itemName, qty, pos, row, column, completed, id);
+            }
+
+            manager.EndUpdate();
         }
 
-        manager.EndUpdate();
         Debug.Log("Loaded shopping lists from sheet");
     }
 

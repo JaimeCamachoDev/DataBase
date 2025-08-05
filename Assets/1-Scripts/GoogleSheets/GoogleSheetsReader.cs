@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
+using System.IO;
+using Microsoft.VisualBasic.FileIO;
 
 public class GoogleSheetsReader : MonoBehaviour
 {
@@ -24,33 +26,38 @@ public class GoogleSheetsReader : MonoBehaviour
         else
         {
             string data = request.downloadHandler.text;
-            string[] lines = data.Split('\n');
-
-            if (lines.Length == 0)
+            using (var reader = new StringReader(data))
+            using (var parser = new TextFieldParser(reader))
             {
-                Debug.LogWarning("Sheet is empty");
-                yield break;
-            }
+                parser.TextFieldType = FieldType.Delimited;
+                parser.SetDelimiters(",");
+                parser.HasFieldsEnclosedInQuotes = true;
 
-            // Use the first row as column names
-            string[] headers = lines[0].Split(',');
-
-            for (int i = 1; i < lines.Length; i++)
-            {
-                string line = lines[i].Trim();
-                if (string.IsNullOrEmpty(line))
-                    continue;
-
-                string[] values = line.Split(',');
-                System.Text.StringBuilder row = new System.Text.StringBuilder();
-
-                for (int j = 0; j < headers.Length && j < values.Length; j++)
+                if (parser.EndOfData)
                 {
-                    if (j > 0) row.Append(", ");
-                    row.AppendFormat("{0}: {1}", headers[j].Trim(), values[j].Trim());
+                    Debug.LogWarning("Sheet is empty");
+                    yield break;
                 }
 
-                Debug.Log(row.ToString());
+                // Use the first row as column names
+                string[] headers = parser.ReadFields();
+
+                while (!parser.EndOfData)
+                {
+                    string[] values = parser.ReadFields();
+                    if (values == null || values.Length == 0)
+                        continue;
+
+                    System.Text.StringBuilder row = new System.Text.StringBuilder();
+
+                    for (int j = 0; j < headers.Length && j < values.Length; j++)
+                    {
+                        if (j > 0) row.Append(", ");
+                        row.AppendFormat("{0}: {1}", headers[j].Trim(), values[j].Trim());
+                    }
+
+                    Debug.Log(row.ToString());
+                }
             }
         }
     }
