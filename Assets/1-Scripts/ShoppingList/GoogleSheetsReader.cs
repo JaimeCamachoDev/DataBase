@@ -1,11 +1,15 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Networking; // requiere el paquete integrado "Unity Web Request"
+using UnityEngine.Networking; // requires the built‑in "Unity Web Request" package
 using System.IO;
 using CsvHelper;
 using CsvHelper.Configuration;
 using System.Globalization;
 
+/// <summary>
+/// Minimal example that downloads a public Google Sheet and prints each row
+/// to the Unity console. Useful for quick debugging.
+/// </summary>
 public class GoogleSheetsReader : MonoBehaviour
 {
     [Tooltip("Public Google Sheets export link")]
@@ -13,9 +17,13 @@ public class GoogleSheetsReader : MonoBehaviour
 
     void Start()
     {
+        // Begin downloading the CSV as soon as the component starts.
         StartCoroutine(GetSheetData());
     }
 
+    /// <summary>
+    /// Coroutine that fetches the CSV data and logs each parsed row.
+    /// </summary>
     IEnumerator GetSheetData()
     {
         UnityWebRequest request = UnityWebRequest.Get(sheetUrl);

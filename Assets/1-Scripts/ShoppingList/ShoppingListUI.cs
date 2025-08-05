@@ -2,14 +2,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// Builds and maintains the visual representation of the shopping lists.
+/// </summary>
 public class ShoppingListUI : MonoBehaviour
 {
     [Header("References")]
     public ShoppingListManager manager;
-    //public TMP_InputField listInput;
-    //public TMP_InputField itemInput;
-    //public TMP_InputField quantityInput;
-    //public TMP_InputField positionInput;
     public Transform itemContainer;
     public Transform completedItemContainer;
     public GameObject itemPrefab;
@@ -28,25 +27,20 @@ public class ShoppingListUI : MonoBehaviour
             manager.ListsChanged -= RebuildItems;
     }
 
+    /// <summary>Creates a placeholder item for quick testing.</summary>
     public void AddItem()
     {
         if (manager == null) return;
-
-
 
         string listName = "Lista";
         string itemName = "Nuevo Item";
         int qty = 1;
         int pos = -1;
 
-
         manager.AddItem(listName, itemName, qty, pos);
-        //itemInput.text = string.Empty;
-        //quantityInput.text = string.Empty;
-        //if (positionInput != null)
-        //    positionInput.text = string.Empty;
     }
 
+    /// <summary>Removes the last item of the default list, if any.</summary>
     public void RemoveItem()
     {
         if (manager == null) return;
@@ -57,6 +51,7 @@ public class ShoppingListUI : MonoBehaviour
             manager.RemoveItem(listName, item.id);
     }
 
+    /// <summary>Rebuilds all item entries in the UI.</summary>
     public void RebuildItems()
     {
         if (manager == null || itemContainer == null || itemPrefab == null) return;

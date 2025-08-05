@@ -2,13 +2,17 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// Handles the UI for a single <see cref="ShoppingItem"/> entry and responds
+/// to swipe gestures for delete/complete/edit actions.
+/// </summary>
 public class ShoppingListItemUI : MonoBehaviour
 {
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI quantityText;
     public SwipeToDeleteItem swipe;
 
-    // Expose the data this prefab represents
+    // References to the data this visual element represents
     [SerializeField] private ShoppingListManager manager;
     [SerializeField] private ShoppingListItemEditorUI editor;
     public string listName;
@@ -26,11 +30,9 @@ public class ShoppingListItemUI : MonoBehaviour
         }
     }
 
-    void Start()
-    {
-        Refresh();
-    }
+    void Start() => Refresh();
 
+    /// <summary>Initializes the UI with the provided data references.</summary>
     public void Setup(ShoppingListManager manager, string listName, ShoppingItem item, ShoppingListItemEditorUI editor = null)
     {
         if (manager != null)
@@ -45,7 +47,7 @@ public class ShoppingListItemUI : MonoBehaviour
         Refresh();
     }
 
-    // Update texts to reflect the current item data
+    /// <summary>Updates texts to reflect the current item data.</summary>
     public void Refresh()
     {
         if (nameText != null)
@@ -65,9 +67,7 @@ public class ShoppingListItemUI : MonoBehaviour
     void OnDelete()
     {
         if (manager != null)
-        {
             manager.RemoveItem(listName, item.id);
-        }
     }
 
     void OnComplete()
