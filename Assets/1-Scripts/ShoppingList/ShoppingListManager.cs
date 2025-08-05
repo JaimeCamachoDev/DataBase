@@ -44,7 +44,7 @@ public class ShoppingListManager : MonoBehaviour
         NotifyChanged();
     }
 
-    public void AddItem(string listName, string itemName, int quantity, int position = -1, int row = -1, int column = -1, bool completed = false, string id = null)
+    public void AddItem(string listName, string itemName, int quantity, int position = -1, int row = -1, int column = -1, bool completed = false, string id = null, string updated = null)
     {
         var list = lists.Find(l => l.name == listName);
         if (list == null)
@@ -61,7 +61,8 @@ public class ShoppingListManager : MonoBehaviour
             completed = completed,
             listName = listName,
             row = row,
-            column = column
+            column = column,
+            updated = string.IsNullOrEmpty(updated) ? DateTime.UtcNow.ToString("o") : updated
         };
 
         if (position >= 0 && position <= list.items.Count)
@@ -84,6 +85,7 @@ public class ShoppingListManager : MonoBehaviour
         if (item == null) return;
 
         item.completed = completed;
+        item.updated = DateTime.UtcNow.ToString("o");
         NotifyChanged();
     }
 
@@ -98,6 +100,7 @@ public class ShoppingListManager : MonoBehaviour
         target.name = newName;
         target.quantity = quantity;
         target.completed = completed;
+        target.updated = DateTime.UtcNow.ToString("o");
         NotifyChanged();
     }
 

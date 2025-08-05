@@ -1,4 +1,6 @@
-const MANAGER_URL = '<REPLACE_WITH_MANAGER_ENDPOINT>';
+// Endpoint del servidor que notificará a los clientes conectados
+// Ejemplo: https://tuservidor.com/sync
+const MANAGER_URL = 'https://your-server.example.com/sync';
 
 function getListsFromSheet() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -13,6 +15,7 @@ function getListsFromSheet() {
   const qtyIdx = headers.indexOf('Units');
   const posIdx = headers.indexOf('Position');
   const completedIdx = headers.indexOf('Completed');
+  const updatedIdx = headers.indexOf('Updated');
   const lists = {};
   data.forEach(row => {
     const listName = listIdx >= 0 ? row[listIdx] : 'List';
@@ -25,10 +28,11 @@ function getListsFromSheet() {
     const completed = typeof rawCompleted === 'string'
       ? rawCompleted.toLowerCase() === 'true'
       : rawCompleted === true;
+    const updated = updatedIdx >= 0 ? row[updatedIdx] : '';
     if (!lists[listName]) {
       lists[listName] = { name: listName, items: [] };
     }
-    lists[listName].items.push({ id: id, name: itemName, quantity: quantity, position: position, completed: completed });
+    lists[listName].items.push({ id: id, name: itemName, quantity: quantity, position: position, completed: completed, updated: updated });
   });
   return { lists: Object.values(lists) };
 }
@@ -36,12 +40,13 @@ function getListsFromSheet() {
 function writeListsToSheet(data) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   sheet.clear();
-  sheet.appendRow(['Id', 'List', 'Item', 'Units', 'Position', 'Completed']);
+  sheet.appendRow(['Id', 'List', 'Item', 'Units', 'Position', 'Completed', 'Updated']);
   data.lists.forEach(function(list) {
     list.items.forEach(function(item, index) {
       const pos = (item.position !== undefined && item.position !== null) ? item.position : index;
       const completed = item.completed === true || item.completed === 'true';
-      sheet.appendRow([item.id || '', list.name, item.name, item.quantity, pos, completed ? 'true' : 'false']);
+      const updated = item.updated || new Date().toISOString();
+      sheet.appendRow([item.id || '', list.name, item.name, item.quantity, pos, completed ? 'true' : 'false', updated]);
     });
   });
 }
@@ -56,11 +61,19 @@ function doPost(e) {
   setSyncing(true);
   writeListsToSheet(data);
   setSyncing(false);
+  // Tras escribir los datos, notificamos al servidor de sincronización
+  // para que emita el cambio al resto de clientes.
+  syncToManager();
   return ContentService.createTextOutput('OK');
 }
 
 function onEdit(e) {
   if (isSyncing()) return;
+  const sheet = e.range.getSheet();
+  const headers = sheet.getDataRange().getValues()[0];
+  const updatedCol = headers.indexOf('Updated') + 1;
+  if (updatedCol > 0)
+    sheet.getRange(e.range.getRow(), updatedCol).setValue(new Date().toISOString());
   syncToManager();
 }
 
