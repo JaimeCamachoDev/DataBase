@@ -9,8 +9,8 @@ public class ShoppingListItemUI : MonoBehaviour
     public SwipeToDeleteItem swipe;
 
     // Expose the data this prefab represents
-    public ShoppingListManager manager;
-    public ShoppingListItemEditorUI editor;
+    [SerializeField] private ShoppingListManager manager;
+    [SerializeField] private ShoppingListItemEditorUI editor;
     public string listName;
     public ShoppingItem item;
 
@@ -28,17 +28,15 @@ public class ShoppingListItemUI : MonoBehaviour
 
     void Start()
     {
-        if (manager == null)
-            manager = FindAnyObjectByType<ShoppingListManager>();
-        if (editor == null)
-            editor = FindObjectOfType<ShoppingListItemEditorUI>(true); // include inactive objects
         Refresh();
     }
 
-    public void Setup(ShoppingListManager manager, string listName, ShoppingItem item)
+    public void Setup(ShoppingListManager manager, string listName, ShoppingItem item, ShoppingListItemEditorUI editor = null)
     {
         if (manager != null)
             this.manager = manager;
+        if (editor != null)
+            this.editor = editor;
         this.listName = listName;
         this.item = item;
         if (this.item != null)
