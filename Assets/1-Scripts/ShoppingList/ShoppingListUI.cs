@@ -60,6 +60,8 @@ public class ShoppingListUI : MonoBehaviour
     {
         if (manager == null || itemContainer == null || itemPrefab == null) return;
 
+        // Start from a clean slate and recreate the entire UI based on the
+        // current data stored in the manager.
         foreach (Transform child in itemContainer)
             Destroy(child.gameObject);
         if (completedItemContainer != null)
