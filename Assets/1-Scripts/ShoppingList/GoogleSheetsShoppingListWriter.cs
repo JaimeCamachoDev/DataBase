@@ -39,23 +39,9 @@ public class GoogleSheetsShoppingListWriter : MonoBehaviour
             QueueUpload();
     }
 
-    IEnumerator OnApplicationQuit()
+    void OnApplicationQuit()
     {
-        // If there's nothing to upload just exit immediately
-        if (manager == null || string.IsNullOrEmpty(scriptUrl))
-            yield break;
-
-        // If an upload is already running wait for it to finish,
-        // otherwise perform a final upload and wait for the request
-        if (uploadInProgress)
-        {
-            while (uploadInProgress)
-                yield return null;
-        }
-        else
-        {
-            yield return UploadCoroutine(manager.lists);
-        }
+        QueueUpload();
     }
 
     void OnListsChanged() => QueueUpload();

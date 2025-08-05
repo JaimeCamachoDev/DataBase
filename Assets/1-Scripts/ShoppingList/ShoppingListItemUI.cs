@@ -67,8 +67,6 @@ public class ShoppingListItemUI : MonoBehaviour
         if (manager != null)
         {
             manager.RemoveItem(listName, item.id);
-            // Once the manager has been updated, remove this UI element.
-            Destroy(gameObject);
         }
     }
 
