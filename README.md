@@ -7,7 +7,6 @@
 
 _**Repositorio destinado a albergar los datos para acceder desde los poryectos en Unity**_
 
-
 </header>
 ## 📊 Acceso a datos desde Google Sheets
 
@@ -18,7 +17,6 @@ Este repositorio incluye un script de ejemplo (`GoogleSheetsReader`) para leer u
 3. Asegúrate de tener activado el paquete integrado **Unity Web Request** en *Package Manager* o añade la dependencia `com.unity.modules.unitywebrequest` al `manifest.json`.
 4. Ejecuta la escena y el script descargará el contenido, mostrándolo en la consola. El script interpreta la primera fila como los encabezados de columna y mostrará cada registro usando esos títulos. Puedes adaptarlo para actualizar cualquier variable de tu juego.
 
-
 ## 🛒 Estructura base para una app de listas de la compra
 
 Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que proporcionan la estructura mínima para una aplicación de listas:
@@ -27,7 +25,6 @@ Se ha añadido un conjunto de scripts en `Assets/1-Scripts/ShoppingList` que pro
 - **ShoppingList**: agrupa varios `ShoppingItem` bajo un nombre de lista.
 - **ShoppingListManager**: permite crear listas y añadir elementos desde código.
 - **GoogleSheetsShoppingListLoader**: lee una hoja de cálculo publicada en formato CSV e incorpora los datos al `ShoppingListManager`, además de enviar los cambios a un script de Apps Script para mantener la hoja sincronizada.
-
 
 Estos componentes sirven como base para desarrollar la funcionalidad de la aplicación sin necesidad de recompilar cada vez que cambien los datos.
 
@@ -54,20 +51,3 @@ Para reducir la latencia entre dispositivos se añade un pequeño servidor (`rea
 5. Cada edición de la hoja enviará los datos al servidor, que los emitirá a todos los clientes conectados; éstos recargarán la lista al instante sin necesidad de reiniciar la app.
 
 Este flujo evita el polling constante y mantiene sincronizadas todas las instancias con una latencia mínima.
-
-   
-<footer>
-   
-## Después de crear el repositorio desde la plantilla, asegúrate de revisar lo siguiente:
-
-### 📸 Social Preview
-- [ ] Sube una imagen `preview.png` personalizada en `Settings → Social Preview`.
-
-
-### 🎨 Personalización visual
-- [ ] Cambiar imagen del banner de portada.
-- [ ] Dejar Topics necesarios.
-
-
-</footer>
-
